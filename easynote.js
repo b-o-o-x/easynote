@@ -7,38 +7,50 @@
 const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
-//const { createCollection } = require('../schemas/users'); //??
-mongoose.pluralize(null);
+mongoose.pluralize(null); // collection name을 복수화(-s)하려는 것 강제로 비활성화
 
-const { Schema } = mongoose;
 
+//############################
 // easynote model
+//############################
+const { Schema } = mongoose;
 const Easynote = new mongoose.model('easynote', {
     num_link: { type: Number }, // 확장용. 댓글 등 추가된 easynote와의 연동을 위한 것..
     num: { type: Number, unique: true }, // auto increment 어케하냐..
     title: { type: String },
     note: { type: String },
-    datetime: { type: Date, default: Date.now },
+    date: { type: Date, default: Date.now },
     id: { type: String },
     pw: { type: String },
     access: { type: String }, // 접근권한. 기본은public/private. 확장사용시 1/2/3/4/5 등 소스코드 구분사용.
     // file ???
 });
-// 무조건 db 테이블 생성 강제.. 이것이 note 생성이자 config 설정
-// var data = { name: name_give, cnt: cnt_give, addr: addr_give, tel: tel_give}
-//db.collection('').insertOne({
-//    "notenum":0,
-//    "title":"easynote_config",
-//    "note": "[",
-//    "id":"andy",
-//    "pw":"test@test.com"});
 
+
+//############################
+// easynote functions
+//############################
 // functions
 function replaceAll(str, searchStr, replaceStr) {
     return str.split(searchStr).join(replaceStr);
 }
+function getCurrentDate() {
+    var date = new Date();
+    var year = date.getFullYear();
+    var month = date.getMonth();
+    var today = date.getDate();
+    var hours = date.getHours();
+    var minutes = date.getMinutes();
+    var seconds = date.getSeconds();
+    var milliseconds = date.getMilliseconds();
+    return new Date(Date.UTC(year, month, today, hours, minutes, seconds, milliseconds));
+}
 
 
+
+//############################
+// easynote pages
+//############################
 // welcome page
 router.get('/', (req, res, next) => {
     console.log(`${req.url} | easynote page`)
@@ -60,9 +72,14 @@ router.get('/', (req, res, next) => {
                 else {
                     console.log("count:", count);
                     if (1 <= count) {
-
-                        res.sendFile(_env.ROOT + '/easynote/list.html', 'utf8');
-
+                        let data = fs.readFileSync(_env.ROOT + '/easynote/list.html', 'utf8');
+                        if (data) {
+                            //data = data.replaceAll('[groupid]', groupid)
+                            data = data.replaceAll('[root]', `${_env.HOST_URI}:${_env.PORT}/easynote`)
+                            data = data.replaceAll('[systemdate]', Date.now()); // OK. - 1970.01.01이후 경과된 ms. front에서는 var sysdate = new Date([systemdate]); 로 사용.
+                            //data = data.replaceAll('[systemdate]', new Date()); // OK. - front에서는 var sysdate = new Date('[systemdate]'); 로 사용
+                            res.send(data);
+                        }
                     }
                     else {
                         console.log('no easynote data.')
@@ -123,8 +140,9 @@ router.get('/read/:num', (req, res, next) => {
 
     let data = fs.readFileSync(_env.ROOT + '/easynote/read.html', 'utf8');
     if (data) {
-        //data = data.replaceAll('[groupid]', groupid)
-        data = data.replaceAll('[root]', `${_env.HOST_URI}:${_env.PORT}/easynote`)
+        data = data.replaceAll('[num]', num)
+        data = data.replaceAll('[root]', `${_env.HOST_URI}:${_env.PORT}/easynote`);
+        data = data.replaceAll('[systemdate]', Date.now());
         res.send(data);
     }
 })
@@ -139,6 +157,10 @@ router.get('/favicon.ico', function(req, res, next) {
     return res.status(204);
 });
 
+
+//############################
+// easynote apis
+//############################
 
 // create api
 router.post('/create', (req, res, next) => {
@@ -343,7 +365,6 @@ router.post('/login', (req, res, next) => {
     });
 });
 
-
 // api:save
 router.post('/save/:num?', function (req, res) {
     console.log(`${req.url} | easynote api`)
@@ -360,62 +381,51 @@ router.post('/save/:num?', function (req, res) {
 
     if (!num_get) { // new
 
-        var query = Easynote.find({});
-        query.count(function (err, count) {
+        Easynote.findOne({}).sort({ num: -1 }).limit(1).exec(function(err, data) {
             if (err) {
                 console.log(err);
                 res.json({
                     result: {
                         success: false,
-                        message: 'easynote count error'
+                        message: 'easynote num_max error'
                     }
                 });
                 return;
             }
             else {
-                console.log("count:", count);
-                if (1 <= count) {
-
-                    var easynote = new Easynote();
-                    easynote.num_link = 0;
-                    easynote.num = count;
-                    easynote.title = 'easynote_config';
-                    easynote.note = '';
-                    easynote.id = id;
-                    easynote.pw = pw;
-                    easynote.access = access;
-                    easynote.save(function(err) {
-                        if (err) {
-                            console.log('easynote save error')
-                            res.json({
-                                result: {
-                                    success: false,
-                                    message: 'easynote save error'
-                                }
-                            });
-                            return;
-                        }
-                        else {
-                            console.log('easynote save successfully.')
-                            res.json({
-                                result: {
-                                    success: true,
-                                    message: 'easynote save successfully.'
-                                }
-                            });
-                        }
-                    })
-
-                }
-                else {
-                    console.log('no easynote data.')
-                    res.json({
-                        result: {
-                            success: false,
-                            message: 'no easynote data.'
-                        }
-                    });
-                }
+                var num_max = data['num'] + 1;
+                console.log('maxNum = ' + num_max);
+                
+                var easynote = new Easynote();
+                easynote.num_link = 0;
+                easynote.num = num_max;
+                easynote.title = title;
+                easynote.note = note;
+                //easynote.date = getCurrentDate(); // ISODate()가 시스템시간과 꼬인다..
+                easynote.id = id;
+                easynote.pw = pw;
+                easynote.access = access;
+                easynote.save(function(err) {
+                    if (err) {
+                        console.log('easynote save error')
+                        res.json({
+                            result: {
+                                success: false,
+                                message: 'easynote save error'
+                            }
+                        });
+                        return;
+                    }
+                    else {
+                        console.log('easynote save successfully.')
+                        res.json({
+                            result: {
+                                success: true,
+                                message: 'easynote save successfully.'
+                            }
+                        });
+                    }
+                })
             }
         });
 
@@ -425,6 +435,94 @@ router.post('/save/:num?', function (req, res) {
 
         }
     }
+})
+
+
+// api: read
+router.post('/read', function(req, res, next) {
+    console.log(`${req.url} | easynote api`)
+
+    var num_post = req.body.num;
+
+    Easynote.findOne({'num':num_post}, function(err, data) {
+        if (err) { res.send(err); }
+        else {
+            console.log(data)
+            if (data == null) {
+                res.json({
+                    result: {
+                        success: false,
+                        message: 'no easynote read data'
+                    }
+                });
+                return;
+            }
+            else {
+                res.json({
+                    result: {
+                        success: true,
+                        message: 'easynote read ok',
+                        row: [
+                            {
+                                'num_link': data['num_link'],
+                                'num': data['num'],
+                                'title': data['title'],
+                                'note': data['note'],
+                                'id': data['id'],
+                                'access': data['access'],
+                                'date': data['date']
+                            },
+                        ]
+                    }
+                });
+            }                
+        }
+    })
+})
+
+
+// api: list
+router.post('/list', function(req, res, next) {
+    console.log(`${req.url} | easynote api`)
+
+    Easynote.find({'num':{ $gte : 1 }, 'access':'public'}).sort({ date:-1 }).exec(function(err, data) {
+        if (err) { res.send(err); }
+        else {
+            //console.log(data)
+            if (data == null) {
+                res.json({
+                    result: {
+                        success: false,
+                        message: 'no easynote list data'
+                    }
+                });
+                return;
+            }
+            else {
+                let datalist = [];
+                for (let i = 0; i < data.length; i++) {
+                    let dict = {
+                        'num_link': data[i]['num_link'],
+                        'num': data[i]['num'],
+                        'title': data[i]['title'],
+                        'note': data[i]['note'],
+                        'id': data[i]['id'],
+                        'access': data[i]['access'],
+                        'date': data[i]['date']
+                    }
+                    datalist[i] = dict;
+                }
+
+                res.json({
+                    result: {
+                        success: true,
+                        message: 'easynote list ok',
+                        row: datalist,
+                    }
+                });
+            }                
+        }
+    })
 })
 
 

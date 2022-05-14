@@ -60,6 +60,10 @@
       width: 80%;
       text-align: left;
     }
+
+    .note {
+      height: 200px;
+    }
     </style>
     
       <script>
@@ -128,7 +132,17 @@
         }
 
         function cancel_easynote() {
-          window.location.href = '[root]';
+            var title_obj = $('#title');
+            var note_obj = $('#note');
+
+            var confirmflag = true;
+            if (title_obj.val() || note_obj.val()) {
+              confirmflag = confirm('There is an note being written. Do you really want to go out?');
+            }
+            
+            if (confirmflag == true) {
+              window.location.href = '[root]';
+            }
         }
         
       if (document.location.search.match(/type=embed/gi)) {
@@ -153,7 +167,7 @@
 
       <h2 class="fs-title">Easynote Write</h2>
       <hr class="title-underline">
-      <h3 class="fs-subtitle">This is step 1</h3>
+      <h3 class="fs-subtitle">This is an easynote write page.</h3>
 
       
       <div class="container">
@@ -163,6 +177,7 @@
             <button class="btn btn-primary" type="button" onclick="cancel_easynote()">cancel</button>
           </div>
         </div>
+        <br>
 
         <div class="input-group flex-nowrap">
           <span class="input-group-text" id="addon-wrapping">title</span>
@@ -171,7 +186,7 @@
 
         <div class="input-group">
           <span class="input-group-text">note</span>
-          <textarea class="form-control" id="note" aria-label="With textarea" placeholder="note contents"></textarea>
+          <textarea class="form-control note" id="note" aria-label="With textarea" placeholder="note contents"></textarea>
         </div>
         <div class="input-group mb-3">
           <input type="text" class="form-control" id="id" placeholder="user id" aria-label="user id">

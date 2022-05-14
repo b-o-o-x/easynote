@@ -8,6 +8,8 @@
   <title>list | easynote</title>
 
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+  <script src='//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js'></script>
+  <script src='//cdnjs.cloudflare.com/ajax/libs/jquery-easing/1.3/jquery.easing.min.js'></script>
   
   <style>
     /*custom font*/
@@ -161,9 +163,16 @@
         margin-top: 7px;
         color: #333;
     }
-    .mb-1 {
-      width: 80%;
+    .mb-num {
+      width: 50px;
+      text-align: center;
+    }
+    .mb-title {
+      width: auto; /* 80% */
       text-align: left;
+    }
+    .mb-note {
+      font-size: 14px;
     }
     </style>
     
@@ -174,11 +183,107 @@
       
       
       <script>
+        $(document).ready(function () {
+            $('.list-group').empty();
+            list_easynote();
+        });
+
         function go_writepage() {
           window.location.href = 'easynote/write';
         }
         function go_readpage(num) {
           window.location.href = 'easynote/read/' + num;
+        }
+
+        function getYYYYMMDD(date) {
+            // return "yyyy-mm-dd"
+            var d = new Date();
+            if (date) d = date;
+            return d.getFullYear() + "-" + ((d.getMonth() + 1) > 9 ? (d.getMonth() + 1).toString() : "0" + (d.getMonth() + 1)) + "-" + (d.getDate() > 9 ? d.getDate().toString() : "0" + d.getDate().toString());
+        }
+        function getYYYYMMDD_HHIISS(date) {
+            // return "yyyy-mm-dd"
+            var d = new Date();
+            if (date) d = date;
+            return d.getFullYear() + "-" + ((d.getMonth() + 1) > 9 ? (d.getMonth() + 1).toString() : "0" + (d.getMonth() + 1)) + "-" + (d.getDate() > 9 ? d.getDate().toString() : "0" + d.getDate().toString()) + " " +
+                  (d.getHours() > 9 ? d.getHours().toString() : "0" + d.getHours().toString()) + ":" + (d.getMinutes() > 9 ? d.getMinutes().toString() : "0" + d.getMinutes().toString()) + ":" + (d.getSeconds() > 9 ? d.getSeconds().toString() : "0" + d.getSeconds().toString());
+        }
+        function getFullYmdStr(date){
+            // retrn "yyyy년 mm월 dd일 hh시 ii분 ss초 fff요일"
+            var d = new Date();
+            if (date) d = date;            
+            return d.getFullYear() + "년 " + (d.getMonth()+1) + "월 " + d.getDate() + "일 " + d.getHours() + "시 " + d.getMinutes() + "분 " + d.getSeconds() + "초 " +  '일월화수목금토'.charAt(d.getUTCDay())+'요일';
+        }
+        function calcDateDiff(type, date1, date2){
+          //두 날짜 사이의 간격을 type 으로 계산해 출력
+            let ret = Math.abs(date1 - date2);
+            switch(type){
+                case 'day':
+                    ret /= 24;
+                case 'hour':
+                    ret /= 60;
+                case 'min':
+                    ret /= 60;
+                case 'sec':
+                    ret /= 1000;
+            }
+            return Math.round(ret);
+        }
+
+        function list_easynote(page) {
+          // list api
+          $.ajax({
+              type: "POST",
+              url: "[root]/list",
+              data: { },
+              success: function (response) {
+                  let result = response["result"];
+
+                  var success = result['success'];
+                  var message = result['message'];
+
+                  if (success == true) {
+                    var row = result['row'];
+                    for (let i = 0; i < row.length; i++) {
+                        let num = row[i]['num']
+                        let title = row[i]['title']
+                        let note = row[i]['note']
+                        let id = row[i]['id']
+                        let access = row[i]['access']
+                        let date = row[i]['date']
+
+                        var notelist = note.split("\n");
+                        var display_note = '';
+                        for(var j = 0; j < notelist.length && j < 3; j++) { // 3줄만 표시
+                          display_note += notelist[j] + "\n";
+                        }
+
+                        // display time
+                        var sysdate = new Date([systemdate]);
+                        var display_date = getYYYYMMDD_HHIISS(new Date(date));
+                        var day_gap = calcDateDiff('day', sysdate, new Date(date));
+                        var display_date_gap = (day_gap <= 1) ? day_gap + ' day ago' : day_gap + ' days ago';
+                        if (day_gap <= 0) { display_date_gap = display_date; }
+
+                        let temp_html = `<a onclick="go_readpage(${num})" class="list-group-item list-group-item-action" aria-current="true">
+                                          <div class="d-flex w-100 justify-content-between">
+                                            <small class="mb-num">#${num}</small>
+                                            <h5 class="mb-title">${title}</h5>
+                                            <small class="mb-date">${display_date_gap}</small>
+                                          </div>
+                                          <p class="mb-note">${display_note}</p>
+                                          <small>..더보기..</small>
+                                        </a>`
+                        $('.list-group').append(temp_html)
+                    }
+                  }
+                  else {
+                      alert(message);
+                  }
+
+                  
+              }
+          })
         }
 
       if (document.location.search.match(/type=embed/gi)) {
@@ -202,7 +307,7 @@
 
       <h2 class="fs-title">Easynote List</h2>
       <hr class="title-underline">
-      <h3 class="fs-subtitle">This is step 1</h3>
+      <h3 class="fs-subtitle">This is an easynote list page. You can scroll for paging.</h3>
 
       
       <div class="container">
@@ -211,68 +316,18 @@
             <button class="btn btn-primary" type="button" onclick="go_writepage()">write</button>
           </div>
         </div>
-
-
-        <table class="table">
-          <thead>
-            <tr>
-              <th scope="col">#</th>
-              <th scope="col">title</th>
-              <th scope="col">id</th>
-              <th scope="col">date</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr onclick="go_readpage(3)">
-              <th scope="row">1</th>
-              <td>제목 3</td>
-              <td>Otto</td>
-              <td>2022.05.13</td>
-            </tr>
-            <tr onclick="go_readpage(2)">
-              <th scope="row">2</th>
-              <td>제목 2</td>
-              <td>Otto</td>
-              <td>2022.05.12</td>
-            </tr>
-            <tr onclick="go_readpage(1)">
-              <th scope="row">3</th>
-              <td>제목 1</td>
-              <td>Otto</td>
-              <td>2022.05.11</td>
-            </tr>
-          </tbody>
-        </table>
-
+        <br>
 
 
         <div class="list-group">
-          <a href="#" onclick="go_readpage(3)" class="list-group-item list-group-item-action active" aria-current="true">
+          <a href="#" onclick="go_readpage(0)" class="list-group-item list-group-item-action active" aria-current="true">
             <div class="d-flex w-100 justify-content-between">
               <small>#3</small>
-              <h5 class="mb-1">제목 3</h5>
+              <h5 class="mb-1">테스트 제목</h5>
               <small>3 days ago</small>
             </div>
-            <p class="mb-1">간단한 내용 보이기.. 블라블라</p>
+            <pre class="mb-1">테스트\n간단한 내용 보이기..\n블라블라</pre>
             <small>..더보기..</small>
-          </a>
-          <a href="#" onclick="go_readpage(2)" class="list-group-item list-group-item-action">
-            <div class="d-flex w-100 justify-content-between">
-              <small>#2</small>
-              <h5 class="mb-1">List group item heading</h5>
-              <small class="text-muted">3 days ago</small>
-            </div>
-            <p class="mb-1">Some placeholder content in a paragraph.</p>
-            <small class="text-muted">And some muted small print.</small>
-          </a>
-          <a href="#" onclick="go_readpage(1)" class="list-group-item list-group-item-action">
-            <div class="d-flex w-100 justify-content-between">
-              <small>#1</small>
-              <h5 class="mb-1">List group item heading</h5>
-              <small class="text-muted">3 days ago</small>
-            </div>
-            <p class="mb-1">Some placeholder content in a paragraph.</p>
-            <small class="text-muted">And some muted small print.</small>
           </a>
         </div>
       </div>
