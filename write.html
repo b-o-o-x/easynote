@@ -22,14 +22,12 @@
     html {
         height: 100%;
         /*Image only BG fallback*/
-        
-        /*background = gradient + image pattern combo*/
-        background: 
-            linear-gradient(rgba(196, 102, 0, 0.6), rgba(155, 89, 182, 0.6));
     }
     
     body {
         font-family: montserrat, arial, verdana;
+        /*background = gradient + image pattern combo*/
+        background: linear-gradient(rgba(196, 102, 0, 0.6), rgba(155, 89, 182, 0.6));
     }
     /*form styles*/
     #msform {
@@ -62,7 +60,8 @@
     }
 
     .note {
-      height: 200px;
+      font-size: 14px;
+      height: 300px;
     }
     </style>
     
@@ -73,7 +72,23 @@
       
       
       <script>
-        function save_easynote() {
+        $(document).ready(function () {
+          var id_obj = $('#id');
+
+          var num = [num];
+          if (num) {
+            read_easynote(num);
+          }
+          else {
+            $('#delete').hide();
+          }
+
+          // 쿠키
+          var cookie_id = getCookie('easynote_id');
+          if (cookie_id) { id_obj.val(cookie_id); }
+        });
+
+        function save_easynote(num) {
             var title_obj = $('#title');
             var note_obj = $('#note');
             var id_obj = $('#id');
@@ -106,10 +121,14 @@
               return;
             }
 
+            var ajax_type = 'POST'; // save new
+            if (num) ajax_type = 'PUT'; // edit
+
             $.ajax({
-                type: "POST",
-                url: "[root]/save",
+                type: ajax_type,
+                url: "[root]/write",
                 data: {
+                    'num': num,
                     'title': title_obj.val(),
                     'note': note_obj.val(),
                     'id': id_obj.val(),
@@ -122,7 +141,10 @@
 
                     if (success) {
                         alert(message);
-                        window.location.href = '[root]';
+                        setCookie('easynote_id', id_obj.val(), 1);
+
+                        let num = response['result']['row'][0]['num']
+                        window.location.replace('[root]/read/' + num);
                     }
                     else {
                         alert(message);
@@ -141,8 +163,109 @@
             }
             
             if (confirmflag == true) {
-              window.location.href = '[root]';
+              window.location.replace('[root]');
             }
+        }
+
+        function read_easynote(num) {
+          var title_obj = $('#title');
+          var note_obj = $('#note');
+          var id_obj = $('#id');
+          var pw_obj = $('#pw');
+          var access_obj = $('#access');
+          
+          // read api
+          $.ajax({
+              type: "POST",
+              url: "[root]/read",
+              data: { 'num':num },
+              success: function (response) {
+                  let result = response["result"];
+
+                  var success = result['success'];
+                  var message = result['message'];
+
+                  if (success == true) {
+                    var row = result['row'];
+                    for (let i = 0; i < row.length; i++) {
+                        let num = row[i]['num']
+                        let title = row[i]['title']
+                        let note = row[i]['note']
+                        let id = row[i]['id']
+                        let access = row[i]['access']
+                        let date = row[i]['date']
+
+                        title_obj.val(title);
+                        note_obj.val(note);
+                        id_obj.val(id);
+                        access_obj.val(access);
+                    }
+                  }
+                  else {
+                      alert(message);
+                  }
+
+                  
+              }
+          })
+        }
+
+        function delete_easynote(num) {
+          var id_obj = $('#id');
+          var pw_obj = $('#pw');
+
+          if (!id_obj.val())
+          {
+            id_obj.focus();
+            return;
+          }
+          else if (!pw_obj.val())
+          {
+            pw_obj.focus();
+            return;
+          }
+          
+          // read api
+          $.ajax({
+              type: "DELETE",
+              url: "[root]/write",
+              data: {
+                  'num': num,
+                  'id': id_obj.val(),
+                  'pw': pw_obj.val(),
+              },
+              success: function (response) {
+                  let result = response["result"];
+
+                  var success = result['success'];
+                  var message = result['message'];
+
+                  if (success == true) {
+                      alert(message);
+                      window.location.replace('[root]'); // replace 현재 page 다시 올수없음. 다시오고싶은경우 href
+                  }
+                  else {
+                      alert(message);
+                  }
+
+                  
+              }
+          })
+        }
+
+
+        // 사용예제) setCookie("key", "value", 1); // 1 day
+        var setCookie = function(name, value, exp) {
+          var date = new Date();
+          date.setTime(date.getTime() + exp*24*60*60*1000);
+          document.cookie = name + '=' + value + ';expires=' + date.toUTCString() + ';path=/';
+        };
+        var getCookie = function(name) {
+          var value = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
+          return value? value[2] : null;
+        };
+        var deleteCookie = function(name) {
+          document.cookie = name + '=; expires=Thu, 01 Jan 1999 00:00:10 GMT;';
         }
         
       if (document.location.search.match(/type=embed/gi)) {
@@ -159,7 +282,7 @@
     <fieldset>
       <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
-          <li class="breadcrumb-item"><a href="../easynote">Home</a></li>
+          <li class="breadcrumb-item"><a href="[root]">home</a></li>
           <li class="breadcrumb-item"><a href="#">write</a></li>
         </ol>
       </nav>
@@ -173,8 +296,9 @@
       <div class="container">
         <div class="buttons">
           <div class="d-grid gap-2 d-md-block">
-            <button class="btn btn-primary" type="button" onclick="save_easynote()">save</button>
-            <button class="btn btn-primary" type="button" onclick="cancel_easynote()">cancel</button>
+            <button class="btn btn-primary" type="button" onclick="save_easynote([num])">save</button>
+            <button class="btn btn-primary" type="button" onclick="cancel_easynote()">cancel</button> |
+            <button class="btn btn-primary" type="button" id="delete" onclick="delete_easynote([num])">delete</button>
           </div>
         </div>
         <br>

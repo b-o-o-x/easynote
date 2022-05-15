@@ -21,14 +21,13 @@
     html {
         height: 100%;
         /*Image only BG fallback*/
-        
-        /*background = gradient + image pattern combo*/
-        background: 
-            linear-gradient(rgba(196, 102, 0, 0.6), rgba(155, 89, 182, 0.6));
     }
     
     body {
+        height: 100%;
         font-family: montserrat, arial, verdana;
+        /*background = gradient + image pattern combo*/
+        background: linear-gradient(rgba(196, 102, 0, 0.6), rgba(155, 89, 182, 0.6));
     }
     /*form styles*/
     #msform {
@@ -185,7 +184,7 @@
       <script>
         $(document).ready(function () {
             $('.list-group').empty();
-            read_easynote();
+            read_easynote([num]);
         });
 
         function getYYYYMMDD_HHIISS(date) {
@@ -202,12 +201,15 @@
         function go_readpage(num) {
           window.location.href = '[root]/read/' + num;
         }
-        function read_easynote() {
+        function go_editpage(num) {
+          window.location.href = '[root]/write/' + num;
+        }
+        function read_easynote(num) {
           // read api
           $.ajax({
               type: "POST",
               url: "[root]/read",
-              data: { 'num':[num] },
+              data: { 'num':num },
               success: function (response) {
                   let result = response["result"];
 
@@ -261,7 +263,8 @@
     <fieldset>
       <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
-          <li class="breadcrumb-item"><a href="[root]">Home</a></li>
+          <li class="breadcrumb-item"><a href="[root]">home</a></li>
+          <li class="breadcrumb-item"><a href="#">read</a></li>
         </ol>
       </nav>
       
@@ -274,7 +277,8 @@
       <div class="container">
         <div class="buttons">
           <div class="d-grid gap-2 d-md-block">
-            <button class="btn btn-primary" type="button" onclick="go_listpage()">list</button>
+            <button class="btn btn-primary" type="button" onclick="go_listpage()">list</button> |
+            <button class="btn btn-primary" type="button" onclick="go_editpage([num])">edit</button>
           </div>
         </div>
         <br>

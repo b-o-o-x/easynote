@@ -21,14 +21,12 @@
     html {
         height: 100%;
         /*Image only BG fallback*/
-        
-        /*background = gradient + image pattern combo*/
-        background: 
-            linear-gradient(rgba(196, 102, 0, 0.6), rgba(155, 89, 182, 0.6));
     }
     
     body {
         font-family: montserrat, arial, verdana;
+        /*background = gradient + image pattern combo*/
+        background: linear-gradient(rgba(196, 102, 0, 0.6), rgba(155, 89, 182, 0.6));
     }
     /*form styles*/
     #msform {
@@ -189,10 +187,10 @@
         });
 
         function go_writepage() {
-          window.location.href = 'easynote/write';
+          window.location.href = '[root]/write';
         }
         function go_readpage(num) {
-          window.location.href = 'easynote/read/' + num;
+          window.location.href = '[root]/read/' + num;
         }
 
         function getYYYYMMDD(date) {
@@ -300,7 +298,8 @@
     <fieldset>
       <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
-          <li class="breadcrumb-item"><a href="easynote">Home</a></li>
+          <li class="breadcrumb-item"><a href="[root]/admin">Admin</a> |</li>
+          <li class="breadcrumb-item"><a href="[root]">home</a></li>
         </ol>
       </nav>
       

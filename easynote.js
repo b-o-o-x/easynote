@@ -111,10 +111,10 @@ router.get('/admin', (req, res, next) => {
             }
             else {
                 // 로그인 되어있으면 admin.html, 아니면 admin_login.html
-                let data = fs.readFileSync(_env.ROOT + '/easynote/admin.html', 'utf8');
+                let data = fs.readFileSync(_env.ROOT + '/easynote/login.html', 'utf8');
                 if (data) {
                     //data = data.replaceAll('[groupid]', groupid)
-                    //data = data.replaceAll('[root]', `${_env.HOST_URI}:${_env.PORT}/easynote`)
+                    data = data.replaceAll('[root]', `${_env.HOST_URI}:${_env.PORT}/easynote`);
                     res.send(data);
                 }
             }
@@ -128,8 +128,8 @@ router.get('/write/:num?', (req, res, next) => {
 
     let data = fs.readFileSync(_env.ROOT + '/easynote/write.html', 'utf8');
     if (data) {
-        //data = data.replaceAll('[groupid]', groupid)
-        data = data.replaceAll('[root]', `${_env.HOST_URI}:${_env.PORT}/easynote`)
+        data = data.replaceAll('[num]', num)
+        data = data.replaceAll('[root]', `${_env.HOST_URI}:${_env.PORT}/easynote`);
         res.send(data);
     }
 })
@@ -168,6 +168,8 @@ router.post('/create', (req, res, next) => {
     var adminid = req.body.adminid;
     var adminpw = req.body.adminpw;
 
+    // base64 encode 한글가능 => decodeURIComponent(atob(pw));
+    adminpw = btoa(encodeURIComponent(adminpw));
 
     //*
     mongoose.connection.db.listCollections({name: 'easynote'})
@@ -335,7 +337,12 @@ router.post('/login', (req, res, next) => {
     var adminid = req.body.adminid;
     var adminpw = req.body.adminpw;
 
-    var query = Easynote.find({'id':adminid, 'pw':adminpw});
+    // base64 encode 한글가능 => decodeURIComponent(atob(pw));
+    adminpw = btoa(encodeURIComponent(adminpw));
+
+    console.log(adminid, adminpw);
+
+    var query = Easynote.find({'num': 0, 'id':adminid, 'pw':adminpw});
     query.count(function (err, count) {
         if (err) {
             console.log(err);
@@ -365,75 +372,252 @@ router.post('/login', (req, res, next) => {
     });
 });
 
-// api:save
-router.post('/save/:num?', function (req, res) {
-    console.log(`${req.url} | easynote api`)
+// api:write post (save)
+router.post('/write', function (req, res) {
+    console.log(`${req.url} | easynote api : post`)
 
-    var num_get = req.params.num;
-    
     var title = req.body.title;
     var note = req.body.note;
     var id = req.body.id;
     var pw = req.body.pw;
     var access = req.body.access;
+
+    // base64 encode 한글가능 => decodeURIComponent(atob(pw));
+    pw = btoa(encodeURIComponent(pw));
     
-    console.log(num_get, title, note, id, pw, access);
+    console.log(title, id, pw, access);
 
-    if (!num_get) { // new
+    Easynote.findOne({}).sort({ num: -1 }).limit(1).exec(function(err, data) { // num저장을 위한 num_max 찾기
+        if (err) {
+            console.log(err);
+            res.json({
+                result: {
+                    success: false,
+                    message: 'easynote num_max error'
+                }
+            });
+            return;
+        }
+        else {
+            var num_max = data['num'] + 1;
+            console.log('num_max = ' + num_max);
+            
+            var easynote = new Easynote();
+            easynote.num_link = 0;
+            easynote.num = num_max;
+            easynote.title = title;
+            easynote.note = note;
+            //easynote.date = getCurrentDate(); // ISODate()가 시스템시간과 꼬인다..
+            easynote.id = id;
+            easynote.pw = pw;
+            easynote.access = access;
+            easynote.save(function(err) {
+                if (err) {
+                    console.log('easynote save error')
+                    res.json({
+                        result: {
+                            success: false,
+                            message: 'easynote save error'
+                        }
+                    });
+                    return;
+                }
+                else {
+                    console.log('easynote save successfully.')
+                    res.json({
+                        result: {
+                            success: true,
+                            message: 'easynote save successfully.',
+                            row: [
+                                {
+                                    'num': num_max,
+                                },
+                            ]
+                        }
+                    });
+                }
+            })
+        }
+    });
 
-        Easynote.findOne({}).sort({ num: -1 }).limit(1).exec(function(err, data) {
+})
+
+// api:write put (edit)
+router.put('/write', function (req, res) {
+    console.log(`${req.url} | easynote api : put`)
+
+    var num_post = req.body.num;
+    var title = req.body.title;
+    var note = req.body.note;
+    var id = req.body.id;
+    var pw = req.body.pw;
+    var pwnew = req.body.pwnew; // 받아야할듯..
+    var access = req.body.access;
+
+    pw = btoa(encodeURIComponent(pw));
+    
+    console.log(num_post, title, id, pw, access);
+
+    if (num_post) { // edit
+
+        Easynote.findOne({'num':num_post}, function(err, data) {
             if (err) {
-                console.log(err);
                 res.json({
                     result: {
                         success: false,
-                        message: 'easynote num_max error'
+                        message: 'easynote edit error. err=' + err
                     }
                 });
-                return;
             }
             else {
-                var num_max = data['num'] + 1;
-                console.log('maxNum = ' + num_max);
-                
-                var easynote = new Easynote();
-                easynote.num_link = 0;
-                easynote.num = num_max;
-                easynote.title = title;
-                easynote.note = note;
-                //easynote.date = getCurrentDate(); // ISODate()가 시스템시간과 꼬인다..
-                easynote.id = id;
-                easynote.pw = pw;
-                easynote.access = access;
-                easynote.save(function(err) {
-                    if (err) {
-                        console.log('easynote save error')
-                        res.json({
-                            result: {
-                                success: false,
-                                message: 'easynote save error'
-                            }
-                        });
-                        return;
-                    }
-                    else {
-                        console.log('easynote save successfully.')
-                        res.json({
-                            result: {
-                                success: true,
-                                message: 'easynote save successfully.'
-                            }
-                        });
-                    }
-                })
+                console.log(data)
+                if (data == null) { // error: no data
+                    res.json({
+                        result: {
+                            success: false,
+                            message: 'no easynote edit data'
+                        }
+                    });
+                    return;
+                }
+                else if (id != data['id'] || pw != data['pw']) { // error
+                    res.json({
+                        result: {
+                            success: false,
+                            message: 'permission error'
+                        }
+                    });
+                    return;
+                }
+                else {
+
+                    Easynote.updateOne({'num':num_post}, {
+                        'title': title,
+                        'note': note,
+                        'access': access,
+                    }, function(err) {
+                        if (err) {
+                            console.log('easynote edit error')
+                            res.json({
+                                result: {
+                                    success: false,
+                                    message: 'easynote edit error'
+                                }
+                            });
+                            return;
+                        }
+                        else {
+                            console.log('easynote edit successfully.')
+                            res.json({
+                                result: {
+                                    success: true,
+                                    message: 'easynote edit successfully.',
+                                    row: [
+                                        {
+                                            'num': num_post,
+                                        },
+                                    ]
+                                }
+                            });
+                        }
+                    })
+
+                }                
             }
-        });
+        })
 
     }
-    else { // edit
-        if (tokenid_get == tokenid) {
+    else {
+        res.json({
+            result: {
+                success: false,
+                message: 'easynote edit error - num wrong..'
+            }
+        });
+        return;
+    }
+})
 
-        }
+// api:write delete (delete)
+router.delete('/write', function (req, res) {
+    console.log(`${req.url} | easynote api : delete`)
+
+    var num_post = req.body.num;
+    var id = req.body.id;
+    var pw = req.body.pw;
+
+    pw = btoa(encodeURIComponent(pw));
+    
+    console.log(num_post, id, pw);
+
+    if (num_post) { //
+
+        Easynote.findOne({'num':num_post}, function(err, data) {
+            if (err) {
+                res.json({
+                    result: {
+                        success: false,
+                        message: 'easynote delete error. err=' + err
+                    }
+                });
+            }
+            else {
+                console.log(data)
+                if (data == null) { // error: no data
+                    res.json({
+                        result: {
+                            success: false,
+                            message: 'no easynote delete data'
+                        }
+                    });
+                    return;
+                }
+                else if (id != data['id'] || pw != data['pw']) { // error
+                    res.json({
+                        result: {
+                            success: false,
+                            message: 'permission error'
+                        }
+                    });
+                    return;
+                }
+                else {
+
+                    Easynote.deleteOne({'num':num_post}, function(err) {
+                        if (err) {
+                            console.log('easynote delete error')
+                            res.json({
+                                result: {
+                                    success: false,
+                                    message: 'easynote delete error. err=' + err
+                                }
+                            });
+                            return;
+                        }
+                        else {
+                            console.log('easynote delete successfully.')
+                            res.json({
+                                result: {
+                                    success: true,
+                                    message: 'easynote delete successfully.'
+                                }
+                            });
+                        }
+                    })
+
+                }                
+            }
+        })
+
+    }
+    else {
+        res.json({
+            result: {
+                success: false,
+                message: 'easynote delete error - num wrong..'
+            }
+        });
+        return;
     }
 })
 
@@ -466,8 +650,8 @@ router.post('/read', function(req, res, next) {
                             {
                                 'num_link': data['num_link'],
                                 'num': data['num'],
-                                'title': data['title'],
-                                'note': data['note'],
+                                'title': (data['access'] == 'public' ? data['title'] : '*** private ***'),
+                                'note': (data['access'] == 'public' ? data['note'] : '*** private ***'),
                                 'id': data['id'],
                                 'access': data['access'],
                                 'date': data['date']
@@ -485,7 +669,7 @@ router.post('/read', function(req, res, next) {
 router.post('/list', function(req, res, next) {
     console.log(`${req.url} | easynote api`)
 
-    Easynote.find({'num':{ $gte : 1 }, 'access':'public'}).sort({ date:-1 }).exec(function(err, data) {
+    Easynote.find({'num':{ $gte : 1 }}).sort({ date:-1 }).exec(function(err, data) {
         if (err) { res.send(err); }
         else {
             //console.log(data)
@@ -504,8 +688,8 @@ router.post('/list', function(req, res, next) {
                     let dict = {
                         'num_link': data[i]['num_link'],
                         'num': data[i]['num'],
-                        'title': data[i]['title'],
-                        'note': data[i]['note'],
+                        'title': (data[i]['access'] == 'public' ? data[i]['title'] : '*** private ***'),
+                        'note': (data[i]['access'] == 'public' ? data[i]['note'] : '*** private ***'),
                         'id': data[i]['id'],
                         'access': data[i]['access'],
                         'date': data[i]['date']
