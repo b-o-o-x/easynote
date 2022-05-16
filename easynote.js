@@ -3,18 +3,43 @@
 //--------------------------------------------------
 // Andy Yang.
 // 22.05.03-18:20 - Init version
+// 22.05.16 - basic crud finished.
+// 22.06.17 - easynote concept changed. (easynote_config, easynote_member)
 //--------------------------------------------------
 const express = require('express');
+const session = require('express-session')
 const router = express.Router();
 const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
 mongoose.pluralize(null); // collection name을 복수화(-s)하려는 것 강제로 비활성화
 
+const app = express();
+app.use(session({
+    secret: `${_env.HOST_URI}:${_env.PORT}`,
+    resave: false,
+    saveUninitialized: false,
+    cookie: { secure: false }
+}))
 
 //############################
 // easynote model
 //############################
-const { Schema } = mongoose;
-const Easynote = new mongoose.model('easynote', {
+var easynote_config_schema = new Schema({
+    collection_tail: { type: String, unique: true }, // 'easynote_' + collection_tail
+    user_id: { type: String },
+    access_read: { type: String },
+    access_write: { type: String },
+    date: { type: Date, default: Date.now },
+})
+var easynote_member_schema = new Schema({
+    user_id: { type: String },
+    user_pw: { type: String },
+    level: { type: Number, default: 9999 },
+    date: { type: Date, default: Date.now },
+})
+//const Easynote_Member = mongoose.model('easynote_member', easynote_member_schema);
+
+var Easynote = new Schema({
     num_link: { type: Number }, // 확장용. 댓글 등 추가된 easynote와의 연동을 위한 것..
     num: { type: Number, unique: true }, // auto increment 어케하냐..
     title: { type: String },
@@ -24,7 +49,7 @@ const Easynote = new mongoose.model('easynote', {
     pw: { type: String },
     access: { type: String }, // 접근권한. 기본은public/private. 확장사용시 1/2/3/4/5 등 소스코드 구분사용.
     // file ???
-});
+})
 
 
 //############################
@@ -45,81 +70,79 @@ function getCurrentDate() {
     var milliseconds = date.getMilliseconds();
     return new Date(Date.UTC(year, month, today, hours, minutes, seconds, milliseconds));
 }
+function is_admin_login(req) {
+    return req.session.admin_id;
+}
+function is_user_login(req) {
+    return req.session.user_id
+}
+function user_logout(req) {
+    req.session.user_id = null;
+    req.session.admin_id = null;
+}
 
 
 
 //############################
 // easynote pages
 //############################
-// welcome page
+// index page
 router.get('/', (req, res, next) => {
     console.log(`${req.url} | easynote page`)
 
-    //res.send("<h3>Welcome to EasyNote</h3><hr>");
-    //res.sendFile(_env.ROOT + '/easynote/welcome3.html', 'utf8');
-
-    mongoose.connection.db.listCollections({name: 'easynote'})
-    .next(function(err, collinfo) {
-        if (collinfo) {
-            // The collection exists
-            var query = Easynote.find({});
-            query.count(function (err, count) {
-                if (err) {
-                    console.log(err);
-                    res.sendFile(_env.ROOT + '/easynote/welcome.html', 'utf8');
-                    return;
-                }
-                else {
-                    console.log("count:", count);
-                    if (1 <= count) {
-                        let data = fs.readFileSync(_env.ROOT + '/easynote/list.html', 'utf8');
-                        if (data) {
-                            //data = data.replaceAll('[groupid]', groupid)
-                            data = data.replaceAll('[root]', `${_env.HOST_URI}:${_env.PORT}/easynote`)
-                            data = data.replaceAll('[systemdate]', Date.now()); // OK. - 1970.01.01이후 경과된 ms. front에서는 var sysdate = new Date([systemdate]); 로 사용.
-                            //data = data.replaceAll('[systemdate]', new Date()); // OK. - front에서는 var sysdate = new Date('[systemdate]'); 로 사용
-                            res.send(data);
-                        }
-                    }
-                    else {
-                        console.log('no easynote data.')
-                        res.sendFile(_env.ROOT + '/easynote/welcome.html', 'utf8');
-                    }
-                }
-            });
-        }
-        else {
-            res.sendFile(_env.ROOT + '/easynote/welcome.html', 'utf8');
-        }
-    });
+    let data = fs.readFileSync(_env.ROOT + '/easynote/index.html', 'utf8');
+    if (data) {
+        //data = data.replaceAll('[groupid]', groupid)
+        data = data.replaceAll('[root]', `${_env.HOST_URI}:${_env.PORT}/easynote`)
+        data = data.replaceAll('[systemdate]', Date.now()); // OK. - 1970.01.01이후 경과된 ms. front에서는 var sysdate = new Date([systemdate]); 로 사용.
+        //data = data.replaceAll('[systemdate]', new Date()); // OK. - front에서는 var sysdate = new Date('[systemdate]'); 로 사용
+        res.send(data);
+    }
 });
 // page: admin
 router.get('/admin', (req, res, next) => {
     // 0번 data 조회해서 있으면 해당 id, pw 확인하고, 없으면 진입.. 진입이후 바로 설정하도록..
     console.log(`${req.url} | easynote page`)
 
-    var query = Easynote.find({'notenum':0});
-    query.count(function (err, count) {
-        if (err) {
-            console.log(err);
-            res.send("error");
-        }
-        else {
-            console.log("count:",count);
-            if (count == 0) { // not initialized..
-                res.send('<h5>No groupid</h5><hr> <a href="/easynote">/easynote</a>');
+    mongoose.connection.db.listCollections({name: 'easynote.member'}).next(function(err, collinfo) {
+        let data = null;
+        if (collinfo) {
+            if (is_admin_login(req)) {
+                console.log('/admin - admin.html')
+                data = fs.readFileSync(_env.ROOT + '/easynote/admin.html', 'utf8');
             }
             else {
-                // 로그인 되어있으면 admin.html, 아니면 admin_login.html
-                let data = fs.readFileSync(_env.ROOT + '/easynote/login.html', 'utf8');
-                if (data) {
-                    //data = data.replaceAll('[groupid]', groupid)
-                    data = data.replaceAll('[root]', `${_env.HOST_URI}:${_env.PORT}/easynote`);
-                    res.send(data);
-                }
+                console.log('/admin - login.html')
+                data = fs.readFileSync(_env.ROOT + '/easynote/login.html', 'utf8');
             }
         }
+        else {
+            console.log('/admin - welcome.html')
+            data = fs.readFileSync(_env.ROOT + '/easynote/welcome.html', 'utf8');
+        }
+
+        if (data) {
+            //data = data.replaceAll('[groupid]', groupid)
+            data = data.replaceAll('[root]', `${_env.HOST_URI}:${_env.PORT}/easynote`)
+            data = data.replaceAll('[systemdate]', Date.now()); // OK. - 1970.01.01이후 경과된 ms. front에서는 var sysdate = new Date([systemdate]); 로 사용.
+            //data = data.replaceAll('[systemdate]', new Date()); // OK. - front에서는 var sysdate = new Date('[systemdate]'); 로 사용
+            res.send(data);
+        }
     });
+})
+// page: login
+router.get('/login', (req, res, next) => {
+    console.log(`${req.url} | easynote page`)
+
+    data = fs.readFileSync(_env.ROOT + '/easynote/login.html', 'utf8');
+
+    if (data) {
+        //data = data.replaceAll('[groupid]', groupid)
+        data = data.replaceAll('[root]', `${_env.HOST_URI}:${_env.PORT}/easynote`)
+        data = data.replaceAll('[systemdate]', Date.now()); // OK. - 1970.01.01이후 경과된 ms. front에서는 var sysdate = new Date([systemdate]); 로 사용.
+        //data = data.replaceAll('[systemdate]', new Date()); // OK. - front에서는 var sysdate = new Date('[systemdate]'); 로 사용
+        res.send(data);
+    }
 })
 // page: write
 router.get('/write/:num?', (req, res, next) => {
@@ -162,7 +185,7 @@ router.get('/favicon.ico', function(req, res, next) {
 // easynote apis
 //############################
 
-// create api
+// api: create (easynote_ 생성)
 router.post('/create', (req, res, next) => {
     console.log(`${req.url} | easynote api`)
     var adminid = req.body.adminid;
@@ -171,8 +194,11 @@ router.post('/create', (req, res, next) => {
     // base64 encode 한글가능 => decodeURIComponent(atob(pw));
     adminpw = btoa(encodeURIComponent(adminpw));
 
+    //mongoose.model('easynote', Easynote, 'easynote');
+    const Easynote_Admin = mongoose.model('easynote_admin', easynote_admin_schema);
+
     //*
-    mongoose.connection.db.listCollections({name: 'easynote'})
+    mongoose.connection.db.listCollections({name: 'easynote_admin'})
     .next(function(err, collinfo) {
         if (collinfo) {
             console.log('easynote collection already exist')
@@ -299,77 +325,336 @@ router.post('/create', (req, res, next) => {
     });
     //*/
 });
-// drop api
-router.post('/drop', (req, res, next) => {
-    console.log(`${req.url} | easynote api`)
 
-    mongoose.connection.db.dropCollection('easynote')
-        .then(() => {
-            mongoose.connection.db.listCollections({name: 'easynote'})
+// api: create_admin
+router.post('/create_admin', (req, res, next) => {
+    console.log(`${req.url} | easynote api`)
+    var admin_id = req.body.admin_id;
+    var admin_pw = req.body.admin_pw;
+
+    // base64 encode 한글가능 => decodeURIComponent(atob(pw));
+    admin_pw = btoa(encodeURIComponent(admin_pw));
+
+    //*
+    mongoose.connection.db.listCollections({name: 'easynote.member'})
+    .next(function(err, collinfo) {
+        if (collinfo) {
+            console.log('easynote.member collection already exist')
+            
+            res.json({
+                result: {
+                    success: false,
+                    message: 'easynote.member collection already exist'
+                }
+            });
+            return;
+        }
+        else {
+            console.log('easynote.member collection not exist')
+
+                mongoose.connection.db.createCollection('easynote.member')
+                    .then(() => {
+                        mongoose.connection.db.listCollections({name: 'easynote.member'})
                         .next(function(err, collinfo) {
                             if (collinfo) {
-                                console.log('easynote collection exist')
-                                // The collection exists
-    
-                                 res.json({
+                                console.log('easynote.member collection exist')
+                                // The easynote.member exists
+
+                                EasynoteMember = mongoose.model('easynote.member', easynote_member_schema);
+                                var easynotemember = new EasynoteMember();
+                                easynotemember.user_id = admin_id;
+                                easynotemember.user_pw = admin_pw;
+                                easynotemember.level = 0;
+                                easynotemember.save(function(err) {
+                                    if (err) {
+                                        console.log('easynote.member save error')
+                                        res.json({
                                             result: {
                                                 success: false,
-                                                message: 'easynote collection drop failed'
+                                                message: 'easynote.member collection created, but save error'
                                             }
                                         });
+                                        return;
+                                    }
+                                    else {
+                                        console.log('easynote.member admin created successfully.')
+                                        res.json({
+                                            result: {
+                                                success: true,
+                                                message: 'easynote.member collection created, and admin info saved successfully.'
+                                            }
+                                        });
+                                    }
+                                })
                             }
                             else {
-                                console.log('easynote collection drop success.')
+                                console.log('easynote.member collection create failed.')
                                 res.json({
                                     result: {
-                                        success: true,
-                                        message: 'easynote collection drop success.'
+                                        success: false,
+                                        message: 'easynote.member collection create failed.'
                                     }
                                 });
                             }
                         });
+                    })
+
+
+            
+
+                
+        }
+    });
+    //*/
+});
+
+
+// drop api
+router.post('/drop', (req, res, next) => {
+    console.log(`${req.url} | easynote api`)
+
+    // session for admin_id
+    if (is_admin_login(req)) {
+        console.log('easynote.member admin logged in')
+
+        mongoose.connection.db.dropCollection('easynote.member').then(() => {
+            mongoose.connection.db.listCollections({name: 'easynote.member'}).next(function(err, collinfo) {
+
+                if (collinfo) {
+                    console.log('easynote.member collection exist')
+                    // The collection exists
+
+                    res.json({
+                        result: {
+                            success: false,
+                            message: 'easynote.member collection drop failed'
+                        }
+                    });
+                }
+                else {
+
+                    console.log('easynote.member collection drop success.')
+
+                    mongoose.connection.db.dropCollection('easynote.config').then(() => {
+                        mongoose.connection.db.listCollections({name: 'easynote.config'}).next(function(err, collinfo) {
+
+                            if (collinfo) {
+                                console.log('easynote.config collection exist')
+
+                                res.json({
+                                    result: {
+                                        success: false,
+                                        message: 'easynote.member collection drop success, but easynote.config collection drop failed'
+                                    }
+                                });
+                            }
+                            else {
+                                console.log('easynote.config collection drop success.')
+
+                                user_logout(req);
+
+                                res.json({
+                                    result: {
+                                        success: true,
+                                        message: 'easynote.member and easynote.config collection drop success.'
+                                    }
+                                })
+                            }
+
+                        })
+                    })
+                    .catch(err => {
+                        console.log('easynote.config collection drop error')
+                    })
+                    .finally(() => {
+                        user_logout(req);
+
+                        res.json({
+                            result: {
+                                success: true,
+                                message: 'easynote.member and easynote.config collection drop success.'
+                            }
+                        })
+                    })
+
+                }
+
+            })
         })
+    }
+    else {
+        console.log('easynote.member no admin logged in')
+
+        res.json({
+            result: {
+                success: false,
+                message: 'no admin logged in. permission error.'
+            }
+        });
+    }
+
+    
 });
 // api:login
 router.post('/login', (req, res, next) => {
     console.log(`${req.url} | easynote api`)
 
-    var adminid = req.body.adminid;
-    var adminpw = req.body.adminpw;
+    var user_id = req.body.user_id;
+    var user_pw = req.body.user_pw;
 
     // base64 encode 한글가능 => decodeURIComponent(atob(pw));
-    adminpw = btoa(encodeURIComponent(adminpw));
+    user_pw = btoa(encodeURIComponent(user_pw));
 
-    console.log(adminid, adminpw);
+    console.log(user_id, user_pw);
 
-    var query = Easynote.find({'num': 0, 'id':adminid, 'pw':adminpw});
-    query.count(function (err, count) {
+    EasynoteMember = mongoose.model('easynote.member', easynote_member_schema);
+    var easynotemember = new EasynoteMember();
+
+    EasynoteMember.findOne({'user_id':user_id, 'user_pw':user_pw}, function(err, data) {
         if (err) {
-            console.log(err);
-            res.send("error");
+            console.log('easynote.member findOne() error.')
+            res.json({
+                result: {
+                    success: false,
+                    message: 'easynote.member findOne() error.'
+                }
+            });
         }
         else {
-            console.log("count:",count);
-            if (count == 0) { // no admin info
-                console.log('easynote no admin info.')
+            console.log(data)
+            if (data == null) { // error: no data
                 res.json({
                     result: {
                         success: false,
-                        message: 'no admin information.'
+                        message: 'no easynote.member data'
                     }
                 });
+                return;
             }
             else {
-                console.log('easynote admin login ok.')
+
+                console.log('easynote.member user login ok.')
+
+                // session for user_id
+                if (req.session.user_id) {
+                    console.log('easynote.member user already logged in')
+                }
+                else {
+                    console.log('easynote.member user set session')
+                    req.session.user_id = user_id;
+                }
+
+                // session for admin_id
+                if (data['level'] == 0) {
+                    if (req.session.admin_id) {
+                        console.log('easynote.member admin already logged in')
+                    }
+                    else {
+                        console.log('easynote.member admin set session')
+                        req.session.admin_id = user_id;
+                    }
+                }
+
                 res.json({
                     result: {
                         success: true,
-                        message: 'admin login ok.'
+                        message: 'easynote.member user login ok.',
+                        row: [
+                            {
+                                'user_id' : user_id,
+                                'admin_id' : req.session.admin_id,
+                            },
+                        ]
                     }
                 });
-            }
+
+            }                
         }
-    });
+    })
+});
+// api:islogin
+router.post('/islogin', (req, res, next) => {
+    console.log(`${req.url} | easynote api`)
+
+    // session for user_id
+    if (req.session.user_id) {
+        console.log('easynote.member user logged in')
+
+        res.json({
+            result: {
+                success: true,
+                message: 'user logged in'
+            }
+        });
+    }
+    else {
+        console.log('easynote.member no uer logged in')
+
+        res.json({
+            result: {
+                success: false,
+                message: 'no user logged in'
+            }
+        });
+    }
+});
+// api:isadmin
+router.post('/isadmin', (req, res, next) => {
+    console.log(`${req.url} | easynote api`)
+
+    // session for admin_id
+    if (req.session.admin_id) {
+        console.log('easynote.member admin logged in')
+
+        res.json({
+            result: {
+                success: true,
+                message: 'admin logged in'
+            }
+        });
+    }
+    else {
+        console.log('easynote.member no admin logged in')
+
+        res.json({
+            result: {
+                success: false,
+                message: 'no admin logged in'
+            }
+        });
+    }
+});
+// api:logout
+router.post('/logout', (req, res, next) => {
+    console.log(`${req.url} | easynote api`)
+
+    // session for user_id
+    if (req.session.user_id || req.session.admin_pw) {
+        console.log('easynote user logged in')
+        
+        // 모든 session 제거..
+        //- 일부만 삭제하려면. req.session.user_id = null;
+        req.session.destroy(() => {
+            //res.redirect('/');
+        })
+
+        res.json({
+            result: {
+                success: true,
+                message: 'log out successfully'
+            }
+        });
+    }
+    else {
+        console.log('easynote no user logged in')
+
+        res.json({
+            result: {
+                success: true,
+                message: 'log out ok'
+            }
+        });
+    }
 });
 
 // api:write post (save)

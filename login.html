@@ -177,57 +177,43 @@
       
       
       <script>
-      if (document.location.search.match(/type=embed/gi)) {
-        window.parent.postMessage("resize", "*");
-      }
+      $(document).ready(function () {
+            easynote_api_islogin();
+        });
 
-
-      function create_easynote() {
-            var adminid_obj = $('#adminid');
-            var adminpw_obj = $('#adminpw');
-            var admincpw_obj = $('#admincpw');
+        function easynote_api_login() {
+            var user_id_obj = $('#user_id');
+            var user_pw_obj = $('#user_pw');
             
-            if (!adminid_obj.val())
+            if (!user_id_obj.val())
             {
-              $(".previous").click();
-              adminid_obj.focus();
+                user_id_obj.focus();
               return;
             }
-            else if (!adminpw_obj.val())
+            else if (!user_pw_obj.val())
             {
-              $(".previous").click();
-              adminpw_obj.focus();
-              return;
-            }
-            else if (!admincpw_obj.val())
-            {
-              $(".previous").click();
-              admincpw_obj.focus();
-              return;
-            }
-            else if (!adminpw_obj.val() || (adminpw_obj.val() != admincpw_obj.val())) {
-              alert('Password is different.')
-              $(".previous").click();
-              adminpw_obj.val('');
-              admincpw_obj.val('');
-              adminpw_obj.focus();
+                user_pw_obj.focus();
               return;
             }
 
             $.ajax({
                 type: "POST",
-                url: window.location + "/create",
+                url: "[root]/login",
                 data: {
-                    'adminid': adminid_obj.val(),
-                    'adminpw': adminpw_obj.val(),
+                    'user_id': user_id_obj.val(),
+                    'user_pw': user_pw_obj.val(),
                 },
                 success: function (response) {
-                    var success = response['result']['success'];
-                    var message = response['result']['message'];
+                    var result = response['result'];
+                    var success = result['success'];
+                    var message = result['message'];
 
                     if (success) {
                         alert(message);
-                        $(".next").click();
+                        if (result['row'][0]['admin_id'])
+                            window.location.replace('[root]/admin');
+                        else
+                            window.location.replace('[root]');
                     }
                     else {
                         alert(message);
@@ -236,41 +222,48 @@
             })
         }
 
-        function login_easynote() {
-            var adminid_obj = $('#adminid2');
-            var adminpw_obj = $('#adminpw2');
-            
-            if (!adminid_obj.val())
-            {
-              adminid_obj.focus();
-              return;
-            }
-            else if (!adminpw_obj.val())
-            {
-              adminpw_obj.focus();
-              return;
-            }
-
+        function easynote_api_logout() {
             $.ajax({
                 type: "POST",
-                url: "[root]/login",
-                data: {
-                    'adminid': adminid_obj.val(),
-                    'adminpw': adminpw_obj.val(),
-                },
+                url: "[root]/logout",
+                data: {},
                 success: function (response) {
                     var success = response['result']['success'];
                     var message = response['result']['message'];
 
                     if (success) {
-                        alert(message + success);
-                        $(".next").click();
+                        alert(message);
+                        window.location.replace('[root]');
                     }
                     else {
                         alert(message);
                     }
                 }
             })
+        }
+
+        function easynote_api_islogin() {
+          // list api
+          $.ajax({
+              type: "POST",
+              url: "[root]/islogin",
+              data: { },
+              success: function (response) {
+                  let result = response["result"];
+
+                  var success = result['success'];
+                  var message = result['message'];
+
+                  if (success == true) {
+                      $('.loginform').hide();
+                      $('.logoutform').show();
+                  }
+                  else {
+                      $('.loginform').show();
+                      $('.logoutform').hide();
+                  }
+              }
+          })
         }
 
         function goto_easynote() {
@@ -285,12 +278,18 @@
 <div id="msform">
     <!-- fieldsets -->
     <fieldset>
-      <h2 class="fs-title">Easynote Admin</h2>
-      <h3 class="fs-subtitle">easynote admin login</h3>
-      <input type="text" name="email" id="adminid2" placeholder="Email" />
-      <input type="password" name="pass" id="adminpw2" placeholder="Password" />
-      <input type="button" name="login" class="login action-button" value="Login" onclick="login_easynote()" />
-      <input type="button" name="easynote" class="easynote action-button" value="Goto Easynote" onclick="goto_easynote()" />
+      <h2 class="fs-title">Easynote Login</h2>
+      <h3 class="fs-subtitle">easynote login page</h3>
+      <div class="loginform">
+        <input type="text" name="email" id="user_id" placeholder="Email" />
+        <input type="password" name="pass" id="user_pw" placeholder="Password" />
+        <input type="button" name="login" class="login action-button" value="Login" onclick="easynote_api_login()" />
+        <input type="button" name="easynote" class="easynote action-button" value="Goto Easynote" onclick="goto_easynote()" />
+      </div>
+      <div class="logoutform">
+        <input type="button" name="logout" class="logout action-button" value="Log Out" onclick="easynote_api_logout()" />
+        <input type="button" name="easynote" class="easynote action-button" value="Goto Easynote" onclick="goto_easynote()" />
+      </div>
     </fieldset>
   </div>
 
