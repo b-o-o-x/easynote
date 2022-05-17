@@ -4,7 +4,8 @@
 // Andy Yang.
 // 22.05.03-18:20 - Init version
 // 22.05.16 - basic crud finished.
-// 22.06.17 - easynote concept changed. (easynote_config, easynote_member)
+// 22.05.17 - easynote concept changed. (easynote_config, easynote_member) => 생각해보니 이게 default여도 아니다...
+// 22.05.18 - easynote.app 폴더구조로 concept 크게 변경. (easynote collection은 필수. easynote.member는 옵션. easynote 자체는 기본은 관리자전용. 설정하면 로그인사용자사용가능.)
 //--------------------------------------------------
 const express = require('express');
 const session = require('express-session')
@@ -90,10 +91,10 @@ function user_logout(req) {
 router.get('/', (req, res, next) => {
     console.log(`${req.url} | easynote page`)
 
-    let data = fs.readFileSync(_env.ROOT + '/easynote/index.html', 'utf8');
+    let data = fs.readFileSync(_env.ROOT + '/easynote-multi-tail/index.html', 'utf8');
     if (data) {
         //data = data.replaceAll('[groupid]', groupid)
-        data = data.replaceAll('[root]', `${_env.HOST_URI}:${_env.PORT}/easynote`)
+        data = data.replaceAll('[root]', `${_env.HOST_URI}:${_env.PORT}/easynote-multi-tail`)
         data = data.replaceAll('[systemdate]', Date.now()); // OK. - 1970.01.01이후 경과된 ms. front에서는 var sysdate = new Date([systemdate]); 로 사용.
         //data = data.replaceAll('[systemdate]', new Date()); // OK. - front에서는 var sysdate = new Date('[systemdate]'); 로 사용
         res.send(data);
