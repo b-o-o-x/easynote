@@ -2,253 +2,116 @@
 <html lang="en" >
 
 <head>
-
-  <meta charset="utf-8" />
+  <meta charset="utf-8">
 
   <title>easynote | write</title>
 
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
-  
   <script src='//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js'></script>
   <script src='//cdnjs.cloudflare.com/ajax/libs/jquery-easing/1.3/jquery.easing.min.js'></script>
 
+  <link rel="stylesheet" href="[root]/css/easynote.css">
+  <script src="[root]/js/easynote.api.js"></script>
+
   <style>
-    /*custom font*/
-    @import url(https://fonts.googleapis.com/css?family=Montserrat);
-    
-    /*basic reset*/
-    * {margin: 0; padding: 0;}
-    
-    html {
-        height: 100%;
-        /*Image only BG fallback*/
-    }
-    
-    body {
-        font-family: montserrat, arial, verdana;
-        /*background = gradient + image pattern combo*/
-        background: linear-gradient(rgba(196, 102, 0, 0.6), rgba(155, 89, 182, 0.6));
-    }
-    /*form styles*/
+    /* write 전용 임시 */
     #msform {
-        width: 90%;
-        margin: 50px auto;
-        /*text-align: center;*/
-        position: relative;
-    }
-    .container {
-        width: 100%;
-        margin: auto;
-        padding: 10px;
-        /*border: 1px solid #fff;*/
-      }
-      .title {
-        color: #fff;
-    }
-    .title-underline {
-        color: #333;
-        border : 0px;
-        border-top: 3px dotted #333;
-    }
-    .message {
-        margin-top: 7px;
-        color: #333;
-    }
-    .mb-1 {
-      width: 80%;
+      width: 100%;
+      margin: 50px auto;
       text-align: left;
+      position: relative;
     }
 
     .note {
       font-size: 14px;
       height: 300px;
     }
-    </style>
+
+    .popup {
+      display: none;
+      height: 100vh;
+      width: 100%;
+      background: black;
+      opacity: 0.7;
+      position: fixed;
+      top: 0;
+      left: 0;z-index:2;
+    }
+    .content {
+      background: #fff;
+      padding: 30px;
+      width: 50%;
+    }
+    .content button {
+      width: 100px;
+    }
+    .show {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+  </style>
     
-      <script>
-      window.console = window.console || function(t) {};
-    </script>
-    
-      
-      
-      <script>
-        $(document).ready(function () {
-          var id_obj = $('#id');
+  <script>
+    $(document).ready(function () {
+      easynote_set_root('[root]')
 
-          var num = [num];
-          if (num) {
-            read_easynote(num);
-          }
-          else {
-            $('#delete').hide();
-          }
+      var id_obj = $('#id');
 
-          // 쿠키
-          var cookie_id = getCookie('easynote_id');
-          if (cookie_id) { id_obj.val(cookie_id); }
-        });
-
-        function save_easynote(num) {
-            var name_obj = $('#name');
-            var note_obj = $('#note');
-
-            if (!name_obj.val())
-            {
-              name_obj.focus();
-              return;
-            }
-            else if (!note_obj.val())
-            {
-              note_obj.focus();
-              return;
-            }
-
-            var ajax_type = 'POST'; // save new
-            if (num) ajax_type = 'PUT'; // edit
-
-            $.ajax({
-                type: ajax_type,
-                url: "[root]/write",
-                data: {
-                    'num': num,
-                    'name': name_obj.val(),
-                    'note': note_obj.val(),
-                },
-                success: function (response) {
-                    var success = response['result']['success'];
-                    var message = response['result']['message'];
-
-                    if (success) {
-                        alert(message);
-
-                        let num = response['result']['row'][0]['num']
-                        window.location.replace('[root]/read/' + num);
-                    }
-                    else {
-                        alert(message);
-                    }
-                }
-            })
-        }
-
-        function cancel_easynote() {
-            var name_obj = $('#name');
-            var note_obj = $('#note');
-
-            var confirmflag = true;
-            if (name_obj.val() || note_obj.val()) {
-              confirmflag = confirm('There is an note being written. Do you really want to go out?');
-            }
-            
-            if (confirmflag == true) {
-              window.location.replace('[root]');
-            }
-        }
-
-        function read_easynote(num) {
-          var name_obj = $('#name');
-          var note_obj = $('#note');
-          
-          // read api
-          $.ajax({
-              type: "POST",
-              url: "[root]/read",
-              data: { 'num':num },
-              success: function (response) {
-                  let result = response["result"];
-
-                  var success = result['success'];
-                  var message = result['message'];
-
-                  if (success == true) {
-                    var row = result['row'];
-                    for (let i = 0; i < row.length; i++) {
-                        let num = row[i]['num']
-                        let name = row[i]['name']
-                        let note = row[i]['note']
-                        let id = row[i]['id']
-                        let date = row[i]['date']
-
-                        name_obj.val(name);
-                        note_obj.val(note);
-                        id_obj.val(id);
-                        access_obj.val(access);
-                    }
-                  }
-                  else {
-                      alert(message);
-                  }
-
-                  
-              }
-          })
-        }
-
-        function delete_easynote(num) {
-          var id_obj = $('#id');
-          var pw_obj = $('#pw');
-
-          if (!id_obj.val())
-          {
-            id_obj.focus();
-            return;
-          }
-          else if (!pw_obj.val())
-          {
-            pw_obj.focus();
-            return;
-          }
-          
-          // read api
-          $.ajax({
-              type: "DELETE",
-              url: "[root]/write",
-              data: {
-                  'num': num,
-                  'id': id_obj.val(),
-                  'pw': pw_obj.val(),
-              },
-              success: function (response) {
-                  let result = response["result"];
-
-                  var success = result['success'];
-                  var message = result['message'];
-
-                  if (success == true) {
-                      alert(message);
-                      window.location.replace('[root]'); // replace 현재 page 다시 올수없음. 다시오고싶은경우 href
-                  }
-                  else {
-                      alert(message);
-                  }
-
-                  
-              }
-          })
-        }
-
-
-        // 사용예제) setCookie("key", "value", 1); // 1 day
-        var setCookie = function(name, value, exp) {
-          var date = new Date();
-          date.setTime(date.getTime() + exp*24*60*60*1000);
-          document.cookie = name + '=' + value + ';expires=' + date.toUTCString() + ';path=/';
-        };
-        var getCookie = function(name) {
-          var value = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
-          return value? value[2] : null;
-        };
-        var deleteCookie = function(name) {
-          document.cookie = name + '=; expires=Thu, 01 Jan 1999 00:00:10 GMT;';
-        }
-        
-      if (document.location.search.match(/type=embed/gi)) {
-        window.parent.postMessage("resize", "*");
+      var num = [num];
+      if (num) {
+        read_easynote_for_edit(num);
       }
-    </script>
+      else {
+        $('#delete').hide();
+      }
+    });    
+
+    function read_easynote_for_edit(num) {
+      var name_obj = $('#name');
+      var note_obj = $('#note');
+
+      var row = easynote_api_read_note(num)
+
+      if (1 <= row.length) {
+        var num_link = row[0]['num_link']
+        var num = row[0]['num']
+        var name = row[0]['name']
+        var note = row[0]['note']
+        var user_id = row[0]['user_id']
+        var date = row[0]['date']
+
+        name_obj.val(name);
+        note_obj.val(note);
+      }
+    }
+
+    function togglePopup(){
+      document.getElementById("popup-1").classList.toggle("active");
+    }
+
+    function show_popup() {
+      $(".popup")
+        .addClass("show")
+        .fadeIn();
+    }
+
+    function hide_popup() {
+      $(".popup").fadeOut();
+    }
+
+  </script>
 </head>
 
 <body>
+  
+<div class="popup">
+  <div class="content">
+    <p>do you really want to delete this node??</p>
+    <button id="close" onclick="easynote_api_delete_note([num])">yes</button>
+    <button id="close" onclick="hide_popup()">no</button>
+  </div>
+</div>
 
 <!-- multistep form -->
 <form id="msform">
@@ -270,9 +133,9 @@
       <div class="container">
         <div class="buttons">
           <div class="d-grid gap-2 d-md-block">
-            <button class="btn btn-primary" type="button" onclick="save_easynote([num])">save</button>
-            <button class="btn btn-primary" type="button" onclick="cancel_easynote()">cancel</button> |
-            <button class="btn btn-primary" type="button" id="delete" onclick="delete_easynote([num])">delete</button>
+            <button class="btn btn-primary" type="button" onclick="easynote_api_save_note([num])">save</button>
+            <button class="btn btn-primary" type="button" onclick="easynote_api_cancel_save([num])">cancel</button> |
+            <button class="btn btn-primary" type="button" id="delete" onclick="show_popup()">delete</button>
           </div>
         </div>
         <br>

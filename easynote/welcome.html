@@ -55,7 +55,7 @@
       <h2 class="fs-title">Create your account</h2>
       <h3 class="fs-subtitle">step 1 : create easynote collection</h3>
       <input type="text" name="collection" id="collection" placeholder="Collection Name" value="easynote" readonly />
-      <input type="button" name="create" class="create action-button" value="Create Easynote" onclick="easynote_api_create_easynote()" />
+      <input type="button" name="create" class="create action-button" value="Create Easynote" onclick="if(easynote_api_create_easynote()){alert('create easynote success')}" />
       <input type="button" name="next" class="next action-button" value="Next" />
     </fieldset>
     <fieldset>
@@ -64,7 +64,7 @@
       <input type="text" name="email" id="admin_id" placeholder="Admin ID" />
       <input type="password" name="pass" id="admin_pw" placeholder="Admin Password" />
       <input type="password" name="cpass" id="admin_cpw" placeholder="Confirm Password" />
-      <input type="button" name="create" class="create action-button" value="Create Easynote.member" onclick="easynote_api_create_easynote_member()" /><br>
+      <input type="button" name="create" class="create action-button" value="Create Easynote.member" onclick="if(easynote_api_create_easynote_member()){alert('create easynote.member success')}" /><br>
       <input type="button" name="previous" class="previous action-button" value="Previous" />
       <input type="button" name="next" class="next action-button" value="Next" />
     </fieldset>
@@ -73,8 +73,8 @@
       <h3 class="fs-subtitle">step 3 : Okay then, admin login test</h3>
       <input type="text" name="email" id="user_id" placeholder="Email" />
       <input type="password" name="pass" id="user_pw" placeholder="Password" />
-      <input type="button" name="login" class="login action-button" value="Login" onclick="easynote_api_try_login()" />
-      <input type="button" name="drop" class="drop action-button" value="Drop Easynote" onclick="easynote_api_drop_easynotes()" />
+      <input type="button" name="login" class="login action-button" value="Login" onclick="if(easynote_api_login()){alert('login success')}" />
+      <input type="button" name="drop" class="drop action-button" value="Drop Easynote" onclick="if(easynote_api_drop_easynotes()){alert('drop easynote, easynote.member success')}" />
       <input type="button" name="previous" class="previous action-button" value="Previous" />
       <input type="button" name="next" class="next action-button" value="Next" />
     </fieldset>

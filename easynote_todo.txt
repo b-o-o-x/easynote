@@ -1,0 +1,18 @@
+
+[ ] easynote
+  + [o] api.js 통합 (list, login, read, welcome, write)
+  + [ ] 수정,삭제 -> 관리자 여부에 따른 권한 검토
+  + [ ] 로그인 멤버 readable, writable -> 테스트
+  + [ ] alert()창을 상단 메시지바 등으로 처리 고려..
+  + [ ] html, css minimal화 하기..
+  + [ ] page scrolling
+[ ] easynote-multi-tail (하나이 easynote에서 여러 bbs 만들어 관리)
+  + [ ] admin
+  + [ ] access_read(or readable), access_write(writable)로 접근 권한 설정
+  + [ ] 각 easynote_bbs의 0th 글을 config로 사용할지 고민..
+  + [ ] private 글은 -> edit 누르면 -> pw 입력 popup?
+[ ] easynote-tokennote
+
+
+// api에서 api 호출 : easynote에서 easynote.comment에서 댓글 조회한다거나..
+// https://stackoverflow.com/questions/44903053/how-to-call-an-api-from-another-api-in-expressjs

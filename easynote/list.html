@@ -13,7 +13,7 @@
   <script src="[root]/js/easynote.api.js"></script>
 
   <style>
-    /*form styles*/
+    /* list 전용 임시 */
     #msform {
       width: 100%;
       margin: 50px auto;
@@ -39,6 +39,9 @@
 
       $('.loginbox').hide();
       $('.logoutbox').hide();
+      $('.list-group').empty(); // sample
+
+      // login check
       var islogin = easynote_api_is_login();
       if (islogin) {
           $('.logoutbox').show();
@@ -47,104 +50,59 @@
           $('.loginbox').show();
       }
 
-        $('.list-group').empty();
-        list_easynote();
+      // easynote list
+      easynote_api_easynote_list();
     });
 
-    function go_writepage() {
-      window.location.href = '[root]/write';
-    }
-    function go_readpage(num) {
-      window.location.href = '[root]/read/' + num;
-    }
-
-    function getYYYYMMDD(date) {
-        // return "yyyy-mm-dd"
-        var d = new Date();
-        if (date) d = date;
-        return d.getFullYear() + "-" + ((d.getMonth() + 1) > 9 ? (d.getMonth() + 1).toString() : "0" + (d.getMonth() + 1)) + "-" + (d.getDate() > 9 ? d.getDate().toString() : "0" + d.getDate().toString());
-    }
-    function getYYYYMMDD_HHIISS(date) {
-        // return "yyyy-mm-dd"
-        var d = new Date();
-        if (date) d = date;
-        return d.getFullYear() + "-" + ((d.getMonth() + 1) > 9 ? (d.getMonth() + 1).toString() : "0" + (d.getMonth() + 1)) + "-" + (d.getDate() > 9 ? d.getDate().toString() : "0" + d.getDate().toString()) + " " +
-              (d.getHours() > 9 ? d.getHours().toString() : "0" + d.getHours().toString()) + ":" + (d.getMinutes() > 9 ? d.getMinutes().toString() : "0" + d.getMinutes().toString()) + ":" + (d.getSeconds() > 9 ? d.getSeconds().toString() : "0" + d.getSeconds().toString());
-    }
-    function getFullYmdStr(date){
-        // retrn "yyyy년 mm월 dd일 hh시 ii분 ss초 fff요일"
-        var d = new Date();
-        if (date) d = date;            
-        return d.getFullYear() + "년 " + (d.getMonth()+1) + "월 " + d.getDate() + "일 " + d.getHours() + "시 " + d.getMinutes() + "분 " + d.getSeconds() + "초 " +  '일월화수목금토'.charAt(d.getUTCDay())+'요일';
-    }
-    function calcDateDiff(type, date1, date2){
-      //두 날짜 사이의 간격을 type 으로 계산해 출력
-        let ret = Math.abs(date1 - date2);
-        switch(type){
-            case 'day':
-                ret /= 24;
-            case 'hour':
-                ret /= 60;
-            case 'min':
-                ret /= 60;
-            case 'sec':
-                ret /= 1000;
-        }
-        return Math.round(ret);
-    }
-
-    function list_easynote(page) {
+    // list.html 전용. paging구현후 api.js로 이동 고려해보자.
+    function easynote_api_easynote_list(page) {
       // list api
       $.ajax({
           type: "POST",
           url: "[root]/list",
           data: { },
           success: function (response) {
-              let result = response["result"];
+            var result = response["result"]
+            var success = result['success']
+            var message = result['message']
+            var row = result['row']
 
-              var success = result['success'];
-              var message = result['message'];
+            if (success == true) {
+              for (let i = 0; i < row.length; i++) {
+                let num = row[i]['num']
+                let name = row[i]['name']
+                let note = row[i]['note']
+                let user_id = row[i]['user_id']
+                let date = row[i]['date']
 
-              if (success == true) {
-                var row = result['row'];
-                for (let i = 0; i < row.length; i++) {
-                    let num = row[i]['num']
-                    let name = row[i]['name']
-                    let note = row[i]['note']
-                    let id = row[i]['id']
-                    let access = row[i]['access']
-                    let date = row[i]['date']
-
-                    var notelist = note.split("\n");
-                    var display_note = '';
-                    for(var j = 0; j < notelist.length && j < 3; j++) { // 3줄만 표시
-                      display_note += notelist[j] + "\n";
-                    }
-
-                    // display time
-                    var sysdate = new Date([systemdate]);
-                    var display_date = getYYYYMMDD_HHIISS(new Date(date));
-                    var day_gap = calcDateDiff('day', sysdate, new Date(date));
-                    var display_date_gap = (day_gap <= 1) ? day_gap + ' day ago' : day_gap + ' days ago';
-                    if (day_gap <= 0) { display_date_gap = display_date; }
-
-                    let temp_html = `<a onclick="go_readpage(${num})" class="list-group-item list-group-item-action" aria-current="true">
-                                      <div class="d-flex w-100 justify-content-between">
-                                        <small class="mb-num">#${num}</small>
-                                        <h5 class="mb-title">${name}</h5>
-                                        <small class="mb-date">${display_date_gap}</small>
-                                      </div>
-                                      <p class="mb-note">${display_note}</p>
-                                      <small>..더보기..</small>
-                                    </a>`
-                    $('.list-group').append(temp_html)
+                var notelist = note.split("\n");
+                var display_note = '';
+                for(var j = 0; j < notelist.length && j < 3; j++) { // 3줄만 표시
+                  display_note += notelist[j] + "<br>";
                 }
-              }
-              else {
-                  alert(message);
-              }
 
-              
+                // display time
+                var sysdate = new Date([systemdate]);
+                var display_date = getYYYYMMDD_HHIISS(new Date(date));
+                var day_gap = calcDateDiff('day', sysdate, new Date(date));
+                var display_date_gap = (day_gap <= 1) ? day_gap + ' day ago' : day_gap + ' days ago';
+                if (day_gap <= 0) { display_date_gap = display_date; }
+
+                let temp_html = `<a onclick="easynote_page_read(${num})" class="list-group-item list-group-item-action" aria-current="true">
+                                  <div class="d-flex w-100 justify-content-between">
+                                    <small class="mb-num">#${num}</small>
+                                    <h5 class="mb-title">${name}</h5>
+                                    <small class="mb-date">${display_date_gap}</small>
+                                  </div>
+                                  <p class="mb-note">${display_note}</p>
+                                  <small>..더보기..</small><small>${user_id}</small>
+                                </a>`
+                $('.list-group').append(temp_html)
+              }
+            }
+            else {
+              alert(message);
+            }              
           }
       })
     }
@@ -176,14 +134,14 @@
       <div class="container">
         <div class="buttons">
           <div class="d-grid gap-2 d-md-block">
-            <button class="btn btn-primary" type="button" onclick="go_writepage()">write</button>
+            <button class="btn btn-primary" type="button" onclick="easynote_page_write()">write</button>
           </div>
         </div>
         <br>
 
 
         <div class="list-group">
-          <a href="#" onclick="go_readpage(0)" class="list-group-item list-group-item-action active" aria-current="true">
+          <a href="#" onclick="easynote_page_read(0)" class="list-group-item list-group-item-action active" aria-current="true">
             <div class="d-flex w-100 justify-content-between">
               <small>#3</small>
               <h5 class="mb-1">테스트 제목</h5>
