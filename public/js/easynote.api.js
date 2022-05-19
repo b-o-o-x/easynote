@@ -1,6 +1,9 @@
 
 var show_response_message = false; // alert show
 var easynote_root = '';
+var easynote_list_loading = false; // list loading..
+var easynote_list_scroll_page = 1;
+var easynote_list_search_word = '';
 
 function easynote_set_root(root) {
   easynote_root = root;

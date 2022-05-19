@@ -37,9 +37,10 @@
     $(document).ready(function () {
       easynote_set_root('[root]')
 
+      $('.list-group').empty(); // sample
+
       $('.loginbox').hide();
       $('.logoutbox').hide();
-      $('.list-group').empty(); // sample
 
       // login check
       var islogin = easynote_api_is_login();
@@ -51,62 +52,105 @@
       }
 
       // easynote list
-      easynote_api_easynote_list();
+      easynote_list_scroll_page = easynote_api_easynote_list(easynote_list_scroll_page);
+
+      // Scroll
+      $(window).scroll(function(){
+        var scrollNow = $(window).scrollTop();
+        let scrollTop = $(window).scrollTop();
+        let windowHeight = $(window).height();
+        let documentHeight = $(document).height();
+
+        //if (scrollNow + $(window).height() + 100 >= $('#mainPage').height()){
+        if (scrollNow + $(window).height() + 100 >= $(document).height()) {
+          easynote_list_scroll_page = easynote_api_easynote_list(easynote_list_scroll_page, easynote_list_search_word)
+        }
+      })
     });
 
+    //setTimeout(function() {
+    const intervalId = setInterval(function() {
+      if ($(document).height() <= $(window).height()) { // no scroll
+        var next_page = easynote_api_easynote_list(easynote_list_scroll_page, easynote_list_search_word)
+        if (easynote_list_scroll_page == next_page) { // end page
+          clearInterval(intervalId)
+        }
+        else {
+          easynote_list_scroll_page = next_page
+        }
+      }
+    }, 500);
+
     // list.html 전용. paging구현후 api.js로 이동 고려해보자.
-    function easynote_api_easynote_list(page) {
+    function easynote_api_easynote_list(page, search_word = '') {
+      var ret_next_page = page;
       // list api
-      $.ajax({
-          type: "POST",
-          url: "[root]/list",
-          data: { },
-          success: function (response) {
-            var result = response["result"]
-            var success = result['success']
-            var message = result['message']
-            var row = result['row']
+      if (!easynote_list_loading) {
+        easynote_list_loading = true;
+        $.ajax({
+            url: "[root]/list",
+            type: "POST",
+            async: false,
+            cache: false,
+            timeout: 3000,
+            data: {
+              'page': page,
+              'search_word': search_word,
+            },
+            success: function (response) {
+              var result = response["result"]
+              var success = result['success']
+              var message = result['message']
+              var row = result['row']
 
-            if (success == true) {
-              for (let i = 0; i < row.length; i++) {
-                let num = row[i]['num']
-                let name = row[i]['name']
-                let note = row[i]['note']
-                let user_id = row[i]['user_id']
-                let date = row[i]['date']
+              if (success == true) {
+                for (let i = 0; i < row.length; i++) {
+                  let num = row[i]['num']
+                  let name = row[i]['name']
+                  let note = row[i]['note']
+                  let user_id = row[i]['user_id']
+                  let date = row[i]['date']
 
-                var notelist = note.split("\n");
-                var display_note = '';
-                for(var j = 0; j < notelist.length && j < 3; j++) { // 3줄만 표시
-                  display_note += notelist[j] + "<br>";
+                  var notelist = note.split("\n");
+                  var display_note = '';
+                  for(var j = 0; j < notelist.length && j < 3; j++) { // 3줄만 표시
+                    display_note += notelist[j] + "<br>";
+                  }
+
+                  // display time
+                  var sysdate = new Date([systemdate]);
+                  var display_date = getYYYYMMDD_HHIISS(new Date(date));
+                  var day_gap = calcDateDiff('day', sysdate, new Date(date));
+                  var display_date_gap = (day_gap <= 1) ? day_gap + ' day ago' : day_gap + ' days ago';
+                  if (day_gap <= 0) { display_date_gap = display_date; }
+
+                  let temp_html = `<a onclick="easynote_page_read(${num})" class="list-group-item list-group-item-action" aria-current="true">
+                                    <div class="d-flex w-100 justify-content-between">
+                                      <small class="mb-num">#${num}</small>
+                                      <h5 class="mb-title">${name}</h5>
+                                      <small class="mb-date">${display_date_gap}</small>
+                                    </div>
+                                    <p class="mb-note">${display_note}</p>
+                                    <small>..더보기..</small><small>${user_id}</small>
+                                  </a>`
+                  $('.list-group').append(temp_html)
                 }
 
-                // display time
-                var sysdate = new Date([systemdate]);
-                var display_date = getYYYYMMDD_HHIISS(new Date(date));
-                var day_gap = calcDateDiff('day', sysdate, new Date(date));
-                var display_date_gap = (day_gap <= 1) ? day_gap + ' day ago' : day_gap + ' days ago';
-                if (day_gap <= 0) { display_date_gap = display_date; }
-
-                let temp_html = `<a onclick="easynote_page_read(${num})" class="list-group-item list-group-item-action" aria-current="true">
-                                  <div class="d-flex w-100 justify-content-between">
-                                    <small class="mb-num">#${num}</small>
-                                    <h5 class="mb-title">${name}</h5>
-                                    <small class="mb-date">${display_date_gap}</small>
-                                  </div>
-                                  <p class="mb-note">${display_note}</p>
-                                  <small>..더보기..</small><small>${user_id}</small>
-                                </a>`
-                $('.list-group').append(temp_html)
+                ret_next_page += 1;
               }
+              else {
+                //alert(message);
+              }
+
+              easynote_list_loading = false;
             }
-            else {
-              alert(message);
-            }              
-          }
-      })
+        })
+      }
+
+      return ret_next_page;
     }
 
+    
 </script>
 </head>
 
@@ -138,7 +182,13 @@
           </div>
         </div>
         <br>
-
+        <div class="buttons">
+          <div class="input-group mb-3">
+            <span class="input-group-text" id="basic-addon1">search</span>
+            <input type="text" id="search-word" class="form-control" placeholder="search word" aria-label="searchword" aria-describedby="basic-addon1">
+          </div>
+        </div>
+        <br>
 
         <div class="list-group">
           <a href="#" onclick="easynote_page_read(0)" class="list-group-item list-group-item-action active" aria-current="true">
@@ -157,6 +207,26 @@
     </fieldset>
   </form>
   
+<script>
+$("#search-word").on('input', function() {
+  $('.list-group').empty(); // sample
+  easynote_list_scroll_page = 1;
+  easynote_list_search_word = $(this).val();
+  easynote_list_scroll_page = easynote_api_easynote_list(easynote_list_scroll_page, easynote_list_search_word)
+
+  const intervalId = setInterval(function() {
+    if ($(document).height() <= $(window).height()) { // no scroll
+      var next_page = easynote_api_easynote_list(easynote_list_scroll_page, easynote_list_search_word)
+      if (easynote_list_scroll_page == next_page) { // end page
+        clearInterval(intervalId)
+      }
+      else {
+        easynote_list_scroll_page = next_page
+      }
+    }
+  }, 500);
+});
+</script>
 </body>
 
 </html>

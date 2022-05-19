@@ -36,6 +36,7 @@ var easynote_schema = new Schema({
   date: { type: Date, default: Date.now },
   // file ???
 })
+//easynote_schema.index({name:'text', note:'text'}) // search_word를 위한 index
 
 
 //############################
@@ -853,6 +854,8 @@ router.post('/read', function(req, res, next) {
 
     var num_post = req.body.num;
 
+    console.log(num_post);
+
     Easynote = mongoose.model('easynote', easynote_schema);
     Easynote.findOne({'num':num_post}, function(err, data) {
         if (err) { res.send(err); }
@@ -894,19 +897,36 @@ router.post('/read', function(req, res, next) {
 router.post('/list', function(req, res, next) {
     console.log(`${req.url} | easynote api`)
 
+    var per_page = 3;
+    var page = Math.max(0, req.body.page - 1);
+    var search_word = req.body.search_word;
+
+    console.log(`page=${page}, search_word=${search_word}`);
+
     Easynote = mongoose.model('easynote', easynote_schema);
-    Easynote.find({'num':{ $gte : 1 }}).sort({ date:-1 }).exec(function(err, data) {
-        if (err) { res.send(err); }
+    //Easynote.find({'num':{ $gte : 1 }, $text:{ $search : search_word }}).limit(per_page).skip(per_page * page).sort({ date:-1 }).exec(function(err, data) { // search_word : schema의 index 필요 document에서 $text를 찾기위해 필요함.
+    //Easynote.find({ 'num':{$gte:1}, 'name':{$regex:search_word,$options:'i'} }).limit(per_page).skip(per_page * page).sort({ date:-1 }).exec(function(err, data) { // name only OK
+    Easynote.find({ 'num':{$gte:1}, $or:[{'name':{$regex:search_word,$options:'i'}}, {'note':{$regex:search_word,$options:'i'}}] }).limit(per_page).skip(per_page * page).sort({ date:-1 }).exec(function(err, data) { // $or OK
+        if (err) {
+          console.log('easynote find() error. err=' + err)
+          res.json({
+            result: {
+              success: false,
+              message: 'easynote find() error. err=' + err
+            }
+          });
+          return;
+        }
         else {
-            //console.log(data)
-            if (data == null) {
-                res.json({
-                    result: {
-                        success: false,
-                        message: 'no easynote list data'
-                    }
-                });
-                return;
+            if (data == null || data.length == 0) { // limit.skip()으로 paging 기능을 추가하니 null아 안 나온다.
+              console.log('no easynote list data')
+              res.json({
+                result: {
+                  success: false,
+                  message: 'no easynote list data'
+                }
+              });
+              return;
             }
             else {
                 let datalist = [];
