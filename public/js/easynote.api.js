@@ -1,12 +1,16 @@
 
 var show_response_message = false; // alert show
 var easynote_root = '';
+var easynote_system_date = '';
 var easynote_list_loading = false; // list loading..
 var easynote_list_scroll_page = 1;
 var easynote_list_search_word = '';
 
 function easynote_set_root(root) {
   easynote_root = root;
+}
+function easynote_set_system_date(d) {
+  easynote_system_date = d;
 }
 
 // easynote api : system
@@ -64,6 +68,40 @@ function easynote_set_root(root) {
 
     $.ajax({
       url: easynote_root + "/islogin",
+      type: "POST",
+      async: false,
+      cache: false,
+      timeout: 3000,
+      data: { },
+      success: function (response) {
+        var result = response['result']
+        var success = result['success']
+        var message = result['message']
+        var row = result['row']
+
+        ret = success;
+
+        if (success == true) {
+          if (show_response_message) alert(message)
+        }
+        else {
+          alert(message)
+        }
+      },
+      error: function() {
+        ret = false;
+      }
+    })
+
+    return ret;
+  }
+
+  // admin check
+  function easynote_api_is_admin() {
+    var ret = false;
+
+    $.ajax({
+      url: easynote_root + "/isadmin",
       type: "POST",
       async: false,
       cache: false,
@@ -242,7 +280,7 @@ function easynote_set_root(root) {
 // easynote api : note
 {
   // read note
-  function easynote_api_read_note(num) {
+  function easynote_api_note_read(num) {
     var ret = null
 
     var name_obj = $('#name');
@@ -289,7 +327,7 @@ function easynote_set_root(root) {
   }
 
   // save note for write.html only
-  function easynote_api_save_note(num) {
+  function easynote_api_note_save(num) {
     var name_obj = $('#name');
     var note_obj = $('#note');
 
@@ -305,7 +343,7 @@ function easynote_set_root(root) {
     }
 
     var ajax_type = 'POST'; // save new
-    if (num) ajax_type = 'PUT'; // edit
+    if (num != null && 0 <= num) ajax_type = 'PUT'; // edit
 
     $.ajax({
       type: ajax_type,
@@ -334,7 +372,7 @@ function easynote_set_root(root) {
   }
 
   // cancel save for write.html only
-  function easynote_api_cancel_save(num) {
+  function easynote_api_note_save_cancel(num) {
     var name_obj = $('#name');
     var note_obj = $('#note');
 
@@ -344,7 +382,7 @@ function easynote_set_root(root) {
     }
 
     if (confirmflag == true) {
-      if (num) {
+      if (num != null && 0 <= num) {
         easynote_page_read(num)
       }
       else {
@@ -354,7 +392,7 @@ function easynote_set_root(root) {
   }
 
   // delete note for write.html only
-  function easynote_api_delete_note(num) {
+  function easynote_api_note_delete(num) {
     // delete
     $.ajax({
       type: "DELETE",
@@ -378,11 +416,296 @@ function easynote_set_root(root) {
       }
     })
   }
+
+  // list.html 전용.
+  function easynote_api_note_list(page, search_word = '') {
+    var ret_next_page = page;
+    // list api
+    if (!easynote_list_loading) {
+      easynote_list_loading = true;
+      $.ajax({
+          url: easynote_root + "/list",
+          type: "POST",
+          async: false,
+          cache: false,
+          timeout: 3000,
+          data: {
+            'page': page,
+            'search_word': search_word,
+          },
+          success: function (response) {
+            var result = response["result"]
+            var success = result['success']
+            var message = result['message']
+            var row = result['row']
+
+            if (success == true) {
+              for (let i = 0; i < row.length; i++) {
+                let num = row[i]['num']
+                let name = row[i]['name']
+                let note = row[i]['note']
+                let user_id = row[i]['user_id']
+                let date = row[i]['date']
+
+                var notelist = note.split("\n");
+                var display_note = '';
+                for(var j = 0; j < notelist.length && j < 3; j++) { // 3줄만 표시
+                  display_note += notelist[j] + "<br>";
+                }
+
+                // display time
+                var sysdate = new Date(easynote_system_date);
+                var display_date = getYYYYMMDD_HHIISS(new Date(date));
+                var day_gap = calcDateDiff('day', sysdate, new Date(date));
+                var display_date_gap = (day_gap <= 1) ? day_gap + ' day ago' : day_gap + ' days ago';
+                if (day_gap <= 0) { display_date_gap = display_date; }
+
+                let temp_html = `<a onclick="easynote_page_read(${num})" class="list-group-item list-group-item-action" aria-current="true">
+                                  <div class="d-flex w-100 justify-content-between">
+                                    <small class="mb-num">#${num}</small>
+                                    <h5 class="mb-title">${name}</h5>
+                                    <small class="mb-date">${display_date_gap}</small>
+                                  </div>
+                                  <p class="mb-note">${display_note}</p>
+                                  <small>..더보기..</small><small>${user_id}</small>
+                                </a>`
+                $('.list-group').append(temp_html)
+              }
+
+              ret_next_page += 1;
+            }
+            else {
+              //alert(message);
+            }
+
+            easynote_list_loading = false;
+          }
+      })
+    }
+
+    return ret_next_page;
+  }
+
+  // admin member list
+  function easynote_api_admin_member_list(page, search_word = '') {
+    var ret_next_page = page;
+    // member list api
+    if (!easynote_list_loading) {
+      easynote_list_loading = true;
+      $.ajax({
+          url: easynote_root + "/admin/member/list",
+          type: "POST",
+          async: false,
+          cache: false,
+          timeout: 3000,
+          data: {
+            'page': page,
+            'search_word': search_word,
+          },
+          success: function (response) {
+            var result = response["result"]
+            var success = result['success']
+            var message = result['message']
+            var row = result['row']
+
+            if (success == true) {
+              for (let i = 0; i < row.length; i++) {
+                let num = row[i]['num']
+                let name = row[i]['name']
+                let note = row[i]['note']
+                let user_id = row[i]['user_id']
+                let date = row[i]['date']
+
+                var display_note = note;
+
+                // display time
+                var sysdate = new Date(easynote_system_date);
+                var display_date = getYYYYMMDD_HHIISS(new Date(date));
+                var day_gap = calcDateDiff('day', sysdate, new Date(date));
+                var display_date_gap = (day_gap <= 1) ? day_gap + ' day ago' : day_gap + ' days ago';
+                if (day_gap <= 0) { display_date_gap = display_date; }
+
+                let temp_html = `<a onclick="easynote_page_admin_member_read(${num})" class="list-group-item list-group-item-action" aria-current="true">
+                                  <div class="d-flex w-100 justify-content-between">
+                                    <small class="mb-num">#${num}</small>
+                                    <h5 class="mb-title">${name}</h5>
+                                    <small class="mb-date">${display_date_gap}</small>
+                                  </div>
+                                  <p class="mb-note">${display_note}</p>
+                                  <small>${user_id}</small>
+                                </a>`
+                $('.list-group').append(temp_html)
+              }
+
+              ret_next_page += 1;
+            }
+            else {
+              //alert(message);
+            }
+
+            easynote_list_loading = false;
+          }
+      })
+    }
+
+    return ret_next_page;
+  }
+
+  // admin read member
+  function easynote_api_admin_member_read(num) {
+    var ret = null
+
+    // read api
+    $.ajax({
+        type: "POST",
+        url: easynote_root + "/admin/member/read",
+        async: false,
+        cache: false,
+        timeout: 3000,
+        data: { 'num':num },
+        success: function (response) {
+          var result = response['result']
+          var success = result['success']
+          var message = result['message']
+          var row = result['row']
+
+          if (show_response_message) alert(message)
+
+          ret = row;
+
+          if (success) {
+            if (show_response_message) alert(message)
+
+            // sample
+            if (1 <= row.length) {
+              var num_link = row[0]['num_link']
+              var num = row[0]['num']
+              var name = row[0]['name']
+              var note = row[0]['note']
+              var user_id = row[0]['user_id']
+              var date = row[0]['date']
+            }
+          }
+          else {
+            alert(message)
+          }
+        }
+    })
+
+    return ret;
+  }
+
+  // admin save member
+  function easynote_api_admin_member_save(num) {
+    var name_obj = $('#name');
+    var note_obj = $('#note');
+    var user_id_obj = $('#user_id');
+    var user_pw_obj = $('#user_pw');
+
+    if (!name_obj.val())
+    {
+      name_obj.focus();
+      return;
+    }
+    else if (!note_obj.val())
+    {
+      note_obj.focus();
+      return;
+    }
+    else if (!user_id_obj.val())
+    {
+      user_id_obj.focus();
+      return;
+    }
+    else if (!user_pw_obj.val())
+    {
+      user_pw_obj.focus();
+      return;
+    }
+
+    var ajax_type = 'POST'; // save new
+    if (num != null && 0 <= num) ajax_type = 'PUT'; // edit
+
+    $.ajax({
+      type: ajax_type,
+      url: easynote_root + "/admin/member/write",
+      data: {
+        'num': num,
+        'name': name_obj.val(),
+        'note': note_obj.val(),
+        'user_id': user_id_obj.val(),
+        'user_pw': user_pw_obj.val(),
+      },
+      success: function (response) {
+        var result = response['result']
+        var success = result['success']
+        var message = result['message']
+        var row = result['row']
+
+        if (success) {
+          if (show_response_message) alert(message)
+          let num = row[0]['num']
+          easynote_page_admin_member_read(num)
+        }
+        else {
+          alert(message)
+        }
+      }
+    })
+  }
+
+  // admin cancel save member
+  function easynote_api_admin_member_save_cancel(num) {
+    var name_obj = $('#name');
+    var note_obj = $('#note');
+
+    var confirmflag = true;
+    if (name_obj.val() || note_obj.val()) {
+      confirmflag = confirm('There is an member being written. Do you really want to go out?');
+    }
+
+    if (confirmflag == true) {
+      if (num != null && 0 <= num) {
+        easynote_page_admin_member_read(num)
+      }
+      else {
+        easynote_page_admin()
+      }
+    }
+  }
+
+  // admin delete member
+  function easynote_api_admin_member_delete(num) {
+    // delete
+    $.ajax({
+      type: "DELETE",
+      url: easynote_root + "/admin/member/write",
+      data: {
+        'num': num,
+      },
+      success: function (response) {
+        var result = response['result']
+        var success = result['success']
+        var message = result['message']
+        var row = result['row']
+
+        if (success == true) {
+          if (show_response_message) alert(message)
+          easynote_page_admin(false)
+        }
+        else {
+          alert(message)
+        }
+      }
+    })
+  }
+
 }
 
 // easynote page going
 {
   function easynote_page(url, history = true) {
+    if (!url) url = easynote_root;
     if (history == true)
       window.location.href = url
     else
@@ -391,8 +714,8 @@ function easynote_set_root(root) {
   function easynote_page_root(history = true) {
     easynote_page(easynote_root, history)
   }
-  function easynote_page_admin(history = true) {
-    easynote_page(easynote_root + '/admin', history)
+  function easynote_page_login(history = true) {
+    easynote_page(easynote_root + '/login', history)
   }
   function easynote_page_list(history = true) {
     easynote_page(easynote_root, history)
@@ -405,6 +728,22 @@ function easynote_set_root(root) {
   }
   function easynote_page_read(num) {
     easynote_page(easynote_root + '/read/' + num)
+  }
+
+  function easynote_page_admin(history = true) {
+    easynote_page(easynote_root + '/admin', history)
+  }
+  function easynote_page_admin_member_list(history = true) {
+    easynote_page(easynote_root + '/admin', history)
+  }
+  function easynote_page_admin_member_write() {
+    easynote_page(easynote_root + '/admin/member/write')
+  }
+  function easynote_page_admin_member_edit(num) {
+    easynote_page(easynote_root + '/admin/member/write/' + num)
+  }
+  function easynote_page_admin_member_read(num) {
+    easynote_page(easynote_root + '/admin/member/read/' + num)
   }
 }
 

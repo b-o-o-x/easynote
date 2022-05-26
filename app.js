@@ -49,6 +49,10 @@ dbPortfolio.connect()
 
 // index
 //app.use('/', require('./easynote')); // 내부에서 상대 URI 사용.
+app.get('/', function(req, res, next) {
+	console.log('/ redirect to /easynote')
+	res.redirect('/easynote');
+})
 
 // easynote
 app.use('/easynote', require('./easynote/easynote'));

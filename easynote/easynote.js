@@ -97,6 +97,15 @@ function session_destroy(req) {
   })
   console.log(`sesstion_destroy() success`)
 }
+function is_json_string(str) {
+  try {
+    var json = JSON.parse(str)
+    return (typeof json == 'object')
+  }
+  catch (e) {
+    return false
+  }
+}
 
 
 //############################
@@ -121,8 +130,8 @@ router.get('/', (req, res, next) => {
       if (html) {
         //data = data.replaceAll('[groupid]', groupid)
         html = html.replaceAll('[root]', `${_env.HOST_URI}:${_env.PORT}/easynote`)
-        html = html.replaceAll('[systemdate]', Date.now()); // OK. - 1970.01.01이후 경과된 ms. front에서는 var sysdate = new Date([systemdate]); 로 사용.
-        //data = data.replaceAll('[systemdate]', new Date()); // OK. - front에서는 var sysdate = new Date('[systemdate]'); 로 사용
+        html = html.replaceAll('[system_date]', Date.now()); // OK. - 1970.01.01이후 경과된 ms. front에서는 var sysdate = new Date([system_date]); 로 사용.
+        //data = data.replaceAll('[system_date]', new Date()); // OK. - front에서는 var sysdate = new Date('[system_date]'); 로 사용
         res.send(html);
       }
     }
@@ -132,8 +141,8 @@ router.get('/', (req, res, next) => {
       if (html) {
         //data = data.replaceAll('[groupid]', groupid)
         html = html.replaceAll('[root]', `${_env.HOST_URI}:${_env.PORT}/easynote`)
-        html = html.replaceAll('[systemdate]', Date.now()); // OK. - 1970.01.01이후 경과된 ms. front에서는 var sysdate = new Date([systemdate]); 로 사용.
-        //data = data.replaceAll('[systemdate]', new Date()); // OK. - front에서는 var sysdate = new Date('[systemdate]'); 로 사용
+        html = html.replaceAll('[system_date]', Date.now()); // OK. - 1970.01.01이후 경과된 ms. front에서는 var sysdate = new Date([system_date]); 로 사용.
+        //data = data.replaceAll('[system_date]', new Date()); // OK. - front에서는 var sysdate = new Date('[system_date]'); 로 사용
         res.send(html);
       }
     }
@@ -148,8 +157,8 @@ router.get('/login', (req, res, next) => {
   if (data) {
     //data = data.replaceAll('[groupid]', groupid)
     data = data.replaceAll('[root]', `${_env.HOST_URI}:${_env.PORT}/easynote`)
-    data = data.replaceAll('[systemdate]', Date.now()); // OK. - 1970.01.01이후 경과된 ms. front에서는 var sysdate = new Date([systemdate]); 로 사용.
-    //data = data.replaceAll('[systemdate]', new Date()); // OK. - front에서는 var sysdate = new Date('[systemdate]'); 로 사용
+    data = data.replaceAll('[system_date]', Date.now()); // OK. - 1970.01.01이후 경과된 ms. front에서는 var sysdate = new Date([system_date]); 로 사용.
+    //data = data.replaceAll('[system_date]', new Date()); // OK. - front에서는 var sysdate = new Date('[system_date]'); 로 사용
     res.send(data);
   }
 })
@@ -162,6 +171,7 @@ router.get('/write/:num?', (req, res, next) => {
   if (data) {
     data = data.replaceAll('[num]', num)
     data = data.replaceAll('[root]', `${_env.HOST_URI}:${_env.PORT}/easynote`);
+    data = data.replaceAll('[system_date]', Date.now());
     res.send(data);
   }
 })
@@ -174,7 +184,7 @@ router.get('/read/:num', (req, res, next) => {
   if (data) {
     data = data.replaceAll('[num]', num)
     data = data.replaceAll('[root]', `${_env.HOST_URI}:${_env.PORT}/easynote`);
-    data = data.replaceAll('[systemdate]', Date.now());
+    data = data.replaceAll('[system_date]', Date.now());
     res.send(data);
   }
 })
@@ -188,6 +198,54 @@ router.get('/favicon.ico', function(req, res, next) {
   console.log(`${req.url} | ${_env.APP_NAME} page`)
   return res.status(204);
 });
+
+
+// page: login
+router.get('/admin', (req, res, next) => {
+  console.log(`${req.url} | easynote admin page`)
+
+  let html = null;
+  if (is_admin_login(req)) {
+    html = fs.readFileSync(_env.ROOT + '/easynote/admin.html', 'utf8');
+  }
+  else {
+    html = fs.readFileSync(_env.ROOT + '/easynote/login.html', 'utf8');
+  }
+
+  if (html) {
+    //data = data.replaceAll('[groupid]', groupid)
+    html = html.replaceAll('[root]', `${_env.HOST_URI}:${_env.PORT}/easynote`)
+    html = html.replaceAll('[system_date]', Date.now()); // OK. - 1970.01.01이후 경과된 ms. front에서는 var sysdate = new Date([system_date]); 로 사용.
+    //data = data.replaceAll('[system_date]', new Date()); // OK. - front에서는 var sysdate = new Date('[system_date]'); 로 사용
+    res.send(html);
+  }
+})
+// page: admin create member
+router.get('/admin/member/write/:num?', (req, res, next) => {
+  var num = req.params.num;
+  console.log(`${req.url} | easynote admin page`)
+
+  let data = fs.readFileSync(_env.ROOT + '/easynote/admin_member_write.html', 'utf8');
+  if (data) {
+    data = data.replaceAll('[num]', num)
+    data = data.replaceAll('[root]', `${_env.HOST_URI}:${_env.PORT}/easynote`);
+    data = data.replaceAll('[system_date]', Date.now());
+    res.send(data);
+  }
+})
+// page: admin read member
+router.get('/admin/member/read/:num', (req, res, next) => {
+  var num = req.params.num;
+  console.log(`${req.url} | easynote admin page`)
+
+  let data = fs.readFileSync(_env.ROOT + '/easynote/admin_member_read.html', 'utf8');
+  if (data) {
+    data = data.replaceAll('[num]', num)
+    data = data.replaceAll('[root]', `${_env.HOST_URI}:${_env.PORT}/easynote`);
+    data = data.replaceAll('[system_date]', Date.now());
+    res.send(data);
+  }
+})
 
 
 //############################
@@ -270,7 +328,7 @@ router.post('/create', (req, res, next) => {
           easynote_member.user_id = admin_id;
           easynote_member.user_pw = admin_pw;
           var note = {
-            level: 0,
+            "level": "0",
           };
           easynote_member.note = JSON.stringify(note);
           easynote_member.save(function(err) {
@@ -432,11 +490,15 @@ router.post('/login', (req, res, next) => {
                 // session for user_id
                 set_session_user_id(req, user_id);
 
-                var note = JSON.parse(data['note'])
+                console.log(data['note'])
+                if (is_json_string(data['note'])) {
+                  console.log('json string right.')
+                  var note = JSON.parse(data['note'])
 
-                // session for admin_id
-                if (note['level'] == 0) {
-                    set_session_admin_id(req, user_id);
+                  // session for admin_id
+                  if (note['level'] == 0) {
+                      set_session_admin_id(req, user_id);
+                  }
                 }
 
                 res.json({
@@ -487,7 +549,7 @@ router.post('/isadmin', (req, res, next) => {
     console.log(`${req.url} | easynote api`)
 
     // session for admin_id
-    if (is_admin_login()) {
+    if (is_admin_login(req)) {
         console.log('easynote.member admin logged in')
 
         res.json({
@@ -773,6 +835,16 @@ router.delete('/write', function (req, res) {
   var num_post = req.body.num;
 
   console.log(num_post);
+  
+  if (num_post == 0) {
+    res.json({
+      result: {
+        success: false,
+        message: 'easynote config note can not be deleted'
+      }
+    });
+    return;
+  }
 
   if (is_admin_login(req) || (is_user_login(req) && is_user_writable(req)) && num_post) { //
 
@@ -929,31 +1001,456 @@ router.post('/list', function(req, res, next) {
               return;
             }
             else {
-                let datalist = [];
-                for (let i = 0; i < data.length; i++) {
-                    let dict = {
-                        'num_link': data[i]['num_link'],
-                        'num': data[i]['num'],
-                        'name': ((is_admin_login(req) || (is_user_login(req) && is_user_readable(req))) ? data[i]['name'] : '*** private ***'),
-                        'note': ((is_admin_login(req) || (is_user_login(req) && is_user_readable(req))) ? data[i]['note'] : '*** private ***'),
-                        'user_id': ((is_admin_login(req) || (is_user_login(req) && is_user_readable(req))) ? data[i]['user_id'] : '*** private ***'),
-                        'date': data[i]['date']
-                    }
-                    datalist[i] = dict;
-                }
+              console.log('easynote list data found')
+              let datalist = [];
+              for (let i = 0; i < data.length; i++) {
+                  let dict = {
+                      'num_link': data[i]['num_link'],
+                      'num': data[i]['num'],
+                      'name': ((is_admin_login(req) || (is_user_login(req) && is_user_readable(req))) ? data[i]['name'] : '*** private ***'),
+                      'note': ((is_admin_login(req) || (is_user_login(req) && is_user_readable(req))) ? data[i]['note'] : '*** private ***'),
+                      'user_id': ((is_admin_login(req) || (is_user_login(req) && is_user_readable(req))) ? data[i]['user_id'] : '*** private ***'),
+                      'date': data[i]['date']
+                  }
+                  datalist[i] = dict;
+              }
 
+              res.json({
+                  result: {
+                      success: true,
+                      message: 'easynote list ok',
+                      row: datalist,
+                  }
+              });
+            }                
+        }
+    })
+})
+
+
+// api: admin member list
+router.post('/admin/member/list', function(req, res, next) {
+  console.log(`${req.url} | easynote api`)
+
+  var per_page = 3;
+  var page = Math.max(0, req.body.page - 1);
+  var search_word = req.body.search_word;
+
+  console.log(`page=${page}, search_word=${search_word}`);
+
+  Easynote = mongoose.model('easynote.member', easynote_schema);
+  Easynote.find({ 'num':{$gte:0}, $or:[{'user_id':{$regex:search_word,$options:'i'}}, {'name':{$regex:search_word,$options:'i'}}, {'note':{$regex:search_word,$options:'i'}}] }).limit(per_page).skip(per_page * page).sort({ date:-1 }).exec(function(err, data) { // $or OK
+      if (err) {
+        console.log('easynote.member find() error. err=' + err)
+        res.json({
+          result: {
+            success: false,
+            message: 'easynote.member find() error. err=' + err
+          }
+        });
+        return;
+      }
+      else {
+          if (data == null || data.length == 0) { // limit.skip()으로 paging 기능을 추가하니 null아 안 나온다.
+            console.log('no easynote.member list data')
+            res.json({
+              result: {
+                success: false,
+                message: 'no easynote.member list data'
+              }
+            });
+            return;
+          }
+          else {
+              let datalist = [];
+              for (let i = 0; i < data.length; i++) {
+                  let dict = {
+                      'num_link': data[i]['num_link'],
+                      'num': data[i]['num'],
+                      'name': (is_admin_login(req) ? data[i]['name'] : '*** private ***'),
+                      'note': (is_admin_login(req) ? data[i]['note'] : '*** private ***'),
+                      'user_id': (is_admin_login(req) ? data[i]['user_id'] : '*** private ***'),
+                      'date': data[i]['date']
+                  }
+                  datalist[i] = dict;
+              }
+
+              res.json({
+                  result: {
+                      success: true,
+                      message: 'easynote.member list ok',
+                      row: datalist,
+                  }
+              });
+          }                
+      }
+  })
+})
+
+// api: admin member write (save)
+router.post('/admin/member/write', function (req, res) {
+  console.log(`${req.url} | easynote admin api`)
+
+  var name = req.body.name;
+  var note = req.body.note;
+  var user_id = req.body.user_id;
+  var user_pw = req.body.user_pw;
+
+  user_pw = btoa(encodeURIComponent(user_pw));
+
+  if (is_admin_login(req)) {
+
+    Easynote = mongoose.model('easynote.member', easynote_schema);
+
+    var query = Easynote.find({});
+    query.count(function (err, count) {
+      if (err) {
+        console.log(err);
+        res.json({
+            result: {
+                success: false,
+                message: 'easynote.member write find() error'
+            }
+        });
+        return;
+      }
+      else {
+
+        if (count == 0) {
+          console.log('easynote.member data found.');
+
+          var easynote = new Easynote();
+          easynote.num_link = 0;
+          easynote.num = 1;
+          easynote.name = name;
+          easynote.note = note;
+          easynote.user_id = user_id;
+          easynote.user_pw = user_pw;
+          easynote.save(function(err) {
+            if (err) {
+              console.log('easynote.member save error')
+              res.json({
+                result: {
+                  success: false,
+                  message: 'easynote.member save error'
+                }
+              }) // json
+              return;
+            }
+            else {
+              console.log('easynote.member save successfully.')
+              res.json({
+                result: {
+                  success: true,
+                  message: 'easynote.member save successfully.',
+                  row: [
+                    {
+                      'num': 1,
+                    },
+                  ]
+                }
+              }) // json
+            }
+          }) // save
+        }
+        else {
+          Easynote.findOne({}).sort({ num: -1 }).limit(1).exec(function(err, data) { // num저장을 위한 num_max 찾기
+            if (err) {
+                console.log('easynote.member num exec() error');
+                res.json({
+                    result: {
+                        success: false,
+                        message: 'easynote.member num_max error'
+                    }
+                });
+                return;
+            }
+            else {
+              console.log('easynote.member data found.');
+  
+              var num_max = data['num'] + 1;
+              console.log('num_max = ' + num_max);
+              
+              var easynote = new Easynote();
+              easynote.num_link = 0;
+              easynote.num = num_max;
+              easynote.name = name;
+              easynote.note = note;
+              easynote.user_id = user_id;
+              easynote.user_pw = user_pw;
+              easynote.save(function(err) {
+  
+                if (err) {
+                  console.log('easynote.member save error')
+                  res.json({
+                    result: {
+                      success: false,
+                      message: 'easynote.member save error'
+                    }
+                  });
+                  return;
+                }
+                else {
+                  console.log('easynote.member save successfully.')
+                  res.json({
+                    result: {
+                      success: true,
+                      message: 'easynote.member save successfully.',
+                      row: [
+                        {
+                          'num': num_max,
+                        },
+                      ]
+                    }
+                  });
+                }
+  
+              });
+            }
+          })
+        }        
+
+      }
+    }) // query.count()
+  }
+  else {
+    console.log('easynote.member save permission error')
+    res.json({
+      result: {
+        success: false,
+        message: 'easynote.member save permission error'
+      }
+    });
+    return;
+  }
+})
+
+// api:admin member write (edit)
+router.put('/admin/member/write', function (req, res) {
+  console.log(`${req.url} | easynote admin api`)
+
+  var num_post = req.body.num;
+  var name = req.body.name;
+  var note = req.body.note;
+  var user_id = req.body.user_id;
+  var user_pw = req.body.user_pw;
+
+  user_pw = btoa(encodeURIComponent(user_pw));
+
+  if (is_admin_login(req) && num_post) { // edit
+
+    Easynote = mongoose.model('easynote.member', easynote_schema);
+
+    Easynote.findOne({'num':num_post}, function(err, data) {
+      if (err) {
+        res.json({
+          result: {
+            success: false,
+            message: 'easynote.member edit error. err=' + err
+          }
+        });
+      }
+      else {
+        console.log(data)
+        if (data == null) { // error: no data
+          res.json({
+            result: {
+              success: false,
+              message: 'no easynote.member edit data'
+            }
+          });
+          return;
+        }
+        else if (!is_admin_login(req)) { // data exist and check permission
+          res.json({
+            result: {
+              success: false,
+              message: 'permission error'
+            }
+          });
+          return;
+        }
+        else {
+
+          Easynote.updateOne({'num':num_post}, {
+            'name': name,
+            'note': note,
+            'user_id': user_id,
+            'user_pw': user_pw,
+          }, function(err) {
+            if (err) {
+              console.log('easynote.member edit error')
+              res.json({
+                result: {
+                  success: false,
+                  message: 'easynote.member edit error'
+                }
+              });
+              return;
+            }
+            else {
+              console.log('easynote.member edit successfully.')
+              res.json({
+                result: {
+                  success: true,
+                  message: 'easynote.member edit successfully.',
+                  row: [
+                    {
+                        'num': num_post,
+                    },
+                  ]
+                }
+              });
+            }
+          })
+
+        }
+      }
+    })
+
+  }
+  else {
+    res.json({
+      result: {
+        success: false,
+        message: 'easynote.member edit error - ' + (!num_post ? 'wrong num' : 'permission error')
+      }
+    });
+    return;
+  }
+})
+
+// api: admin member (delete)
+router.delete('/admin/member/write', function (req, res) {
+  console.log(`${req.url} | easynote admin api : delete`)
+
+  var num_post = req.body.num;
+
+  if (num_post == 0) {
+    res.json({
+      result: {
+        success: false,
+        message: 'easynote.member admin can not be deleted'
+      }
+    });
+    return;
+  }
+
+  if (is_admin_login(req) && num_post) { //
+
+    Easynote = mongoose.model('easynote.member', easynote_schema);
+
+    Easynote.findOne({'num':num_post}, function(err, data) {
+      if (err) {
+        res.json({
+          result: {
+            success: false,
+            message: 'easynote.member findOne() error. err=' + err
+          }
+        });
+      }
+      else {
+        console.log(data)
+        if (data == null) { // error: no data
+          res.json({
+            result: {
+              success: true,
+              message: 'no easynote.member data'
+            }
+          });
+          return;
+        }
+        else if (!is_admin_login(req)) { // data exist and check permission
+          res.json({
+            result: {
+              success: false,
+              message: 'permission error'
+            }
+          });
+          return;
+        }
+        else {
+
+          Easynote.deleteOne({'num':num_post}, function(err) {
+            if (err) {
+              console.log('easynote.member deleteOne() error')
+              res.json({
+                result: {
+                  success: false,
+                  message: 'easynote.member delete error. err=' + err
+                }
+              });
+              return;
+            }
+            else {
+              console.log('easynote.member delete successfully.')
+              res.json({
+                result: {
+                  success: true,
+                  message: 'easynote.member delete successfully.'
+                }
+              });
+            }
+          })
+
+        }
+      }
+    })
+
+  }
+  else {
+    res.json({
+      result: {
+        success: false,
+        message: 'easynote.member delete error - ' + (!num_post ? 'wrong num' : 'permission error')
+      }
+    });
+    return;
+  }
+})
+// api: admin member read
+router.post('/admin/member/read', function(req, res, next) {
+    console.log(`${req.url} | easynote admin api`)
+
+    var num_post = req.body.num;
+
+    console.log(num_post);
+
+    Easynote = mongoose.model('easynote.member', easynote_schema);
+    Easynote.findOne({'num':num_post}, function(err, data) {
+        if (err) { res.send(err); }
+        else {
+            console.log(data)
+            if (data == null) {
+                res.json({
+                    result: {
+                        success: false,
+                        message: 'no easynote.member read data'
+                    }
+                });
+                return;
+            }
+            else {
                 res.json({
                     result: {
                         success: true,
-                        message: 'easynote list ok',
-                        row: datalist,
+                        message: 'easynote.member read ok',
+                        row: [
+                            {
+                                'num_link': data['num_link'],
+                                'num': data['num'],
+                                'name': (is_admin_login(req) ? data['name'] : '*** private ***'),
+                                'note': (is_admin_login(req) ? data['note'] : '*** private ***'),
+                                'user_id': (is_admin_login(req) ? data['user_id'] : '*** private ***'),
+                                'date': data['date']
+                            },
+                        ]
                     }
                 });
             }                
         }
     })
 })
-
 
 
 

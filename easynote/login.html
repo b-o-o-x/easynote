@@ -16,6 +16,7 @@
   <script>
     $(document).ready(function () {
       easynote_set_root('[root]')
+      easynote_set_system_date([system_date])
 
       $('.loginbox').hide();
       $('.logoutbox').hide();
@@ -39,10 +40,16 @@
         <h2 class="fs-title">easynote login</h2>
         <h3 class="fs-subtitle">easynote login page</h3>
         <div class="loginbox">
-            <input type="text" name="email" id="user_id" placeholder="Email" />
-            <input type="password" name="pass" id="user_pw" placeholder="Password" />
-            <input type="button" name="login" class="login action-button" value="Login" onclick="if(easynote_api_login()) {easynote_page_root()}" />
-            <input type="button" name="easynote" class="easynote action-button" value="Goto Easynote" onclick="easynote_page_root()" />
+          <div class="input-group flex-nowrap">
+            <span class="input-group-text" id="addon-wrapping">email</span>
+            <input type="text" class="form-control" id="user_id" placeholder="user email" aria-label="email" aria-describedby="addon-wrapping">
+          </div>
+          <div class="input-group flex-nowrap">
+            <span class="input-group-text" id="addon-wrapping">password</span>
+            <input type="password" class="form-control" id="user_pw" placeholder="user password" aria-label="pass" aria-describedby="addon-wrapping">
+          </div>
+          <input type="button" name="login" class="login action-button" value="Login" onclick="if(easynote_api_login()) {easynote_page_root()}" />
+          <input type="button" name="easynote" class="easynote action-button" value="Goto Easynote" onclick="easynote_page_root()" />
         </div>
         <div class="logoutbox">
             <h3 class="fs-subtitle">Welcome, you're already logged in.</h3>

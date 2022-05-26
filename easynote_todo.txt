@@ -2,14 +2,29 @@
 [ ] easynote
   + [o] api.js 통합 (list, login, read, welcome, write)
   + [O] 관리자만 수정,삭제
+  + [ ] 관리자: note.num=0 보이기 및 crud. note={"user_readable":"false", "user_writable":"false"} 수정할 수 있도록
+  + [ ] 관리자: welcome 생성시 member.name='admin', note.num=0 생성 with {"user_readable":"false", "user_writable":"false"}
   + [ ] 로그인 멤버 readable, writable -> 테스트
   + [O] ajax 무한스크롤링
-  + [ ] 검색 (한글자 입력할때마다 가져오도록!? 멋지겠는걸!)
+  + [o] 검색 (한글자 입력할때마다 가져오도록!? 멋지겠는걸!)
+  + [o] admin: member crud & login-in (직접 가입가능은 확장된 easynote에서 필요시 만들어 사용하자)
+  + [ ] login: email check & email 인증?
   + [ ] alert()창을 상단 메시지바 등으로 처리 고려..
   + [ ] html, css minimal화 하기..
-  + [ ] tinymce 고려.. 그러면 file, photo도 고려되어야.. 쩝..
+  + [ ] tinymce 고려.. 그러면 file, photo도 고려되어야.. 쩝.. summernote 그냥되는데? 확인해보자
+  + [ ] express 이메일 인증.. (https://velog.io/@tkdfo93/Email-%EC%9D%B8%EC%A6%9D-%EA%B5%AC%ED%98%84-Final-Project-Skill)
+  + [ ] SNS 로그인 (Naver, 카카오톡 등)
 [ ] easynote-comment
 [ ] easynote-tokennote <= 원래 목표..
+  + [ ] 빨리 만들자.. tokennote로 tokennotebook 만들고,
+        booxlab.co.kr을 구성하는거다!!! 그래서 교육사이트 만들자!!! (무료 + 유료)
+        +------------+             +------------------+
+        | [메인]     |  -> 들어가면 |사 |   동영상      | 유튭연동 등
+        | 책 책 책 책 |             |이 |--------------+
+                                   |드  |  설명        |
+                                   |목차|              |
+  + [ ] 이야 그러려면, notebook별 사용자 read 권한 설정 admin 페이지
+  + [ ] slack-like도 빨리 되면 좋겠고.. 아니면 걍 slack 써..
 [ ] easynote-multi-tail (하나이 easynote에서 여러 bbs 만들어 관리)
   + [ ] admin
   + [ ] access_read(or readable), access_write(writable)로 접근 권한 설정
