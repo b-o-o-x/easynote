@@ -39,9 +39,14 @@
       easynote_set_system_date([system_date])
 
       $('.list-group').empty(); // sample
+      $('.config-group').empty();
 
       $('.loginbox').hide();
       $('.logoutbox').hide();
+
+      // config
+      if (easynote_api_is_admin())
+        read_easynote(0);
 
       // login check
       var islogin = easynote_api_is_login();
@@ -112,6 +117,7 @@
                   let user_id = row[i]['user_id']
                   let date = row[i]['date']
 
+                  // note 3 lines
                   var notelist = note.split("\n");
                   var display_note = '';
                   for(var j = 0; j < notelist.length && j < 3; j++) { // 3줄만 표시
@@ -119,7 +125,7 @@
                   }
 
                   // display time
-                  var sysdate = new Date([systemdate]);
+                  var sysdate = new Date([system_date]);
                   var display_date = getYYYYMMDD_HHIISS(new Date(date));
                   var day_gap = calcDateDiff('day', sysdate, new Date(date));
                   var display_date_gap = (day_gap <= 1) ? day_gap + ' day ago' : day_gap + ' days ago';
@@ -152,6 +158,44 @@
     }
 
     
+
+    function read_easynote(num) {
+      var row = easynote_api_note_read(num)
+
+      if (1 <= row.length) {
+        var num_link = row[0]['num_link']
+        var num = row[0]['num']
+        var name = row[0]['name']
+        var note = row[0]['note']
+        var user_id = row[0]['user_id']
+        var date = row[0]['date']
+
+        // display time
+        var sysdate = new Date([system_date]);
+        var display_date = getYYYYMMDD_HHIISS(new Date(date));
+        var day_gap = calcDateDiff('day', sysdate, new Date(date));
+        var display_date_gap = (day_gap <= 1) ? day_gap + ' day ago' : day_gap + ' days ago';
+        if (day_gap <= 0) { display_date_gap = display_date; }
+
+        // note 3 lines
+        var notelist = note.split("\n");
+        var display_note = '';
+        for(var j = 0; j < notelist.length && j < 3; j++) { // 3줄만 표시
+          display_note += notelist[j] + "<br>";
+        }
+
+        let temp_html = `<a onclick="easynote_page_read(${num})" class="list-group-item list-group-item-action" aria-current="true">
+                          <div class="d-flex w-100 justify-content-between">
+                            <small class="mb-num">#${num}</small>
+                            <h5 class="mb-title">${name}</h5>
+                            <small class="mb-date">${display_date_gap}</small>
+                          </div>
+                          <p class="mb-note">${display_note}</p>
+                          <small>..더보기..</small><small>${user_id}</small>
+                        </a>`
+        $('.config-group').append(temp_html)
+      }
+    }
 </script>
 </head>
 
@@ -175,7 +219,18 @@
       <hr class="title-underline">
       <h3 class="fs-subtitle">This is an easynote list page. You can scroll for paging.</h3>
 
-      
+      <div class="config-group">
+        <a href="#" onclick="easynote_page_read(0)" class="list-group-item list-group-item-action active" aria-current="true">
+          <div class="d-flex w-100 justify-content-between">
+            <small>#3</small>
+            <h5 class="mb-1">테스트 제목</h5>
+            <small>3 days ago</small>
+          </div>
+          <pre class="mb-1">테스트\n간단한 내용 보이기..\n블라블라</pre>
+          <small>..더보기..</small>
+        </a>
+      </div>
+
       <div class="container">
         <div class="buttons">
           <div class="d-grid gap-2 d-md-block">

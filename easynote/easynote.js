@@ -34,6 +34,7 @@ var easynote_schema = new Schema({
   user_id: { type: String },
   user_pw: { type: String },
   date: { type: Date, default: Date.now },
+  count: { type: Number, }
   // file ???
 })
 //easynote_schema.index({name:'text', note:'text'}) // search_word를 위한 index
