@@ -23,7 +23,7 @@ mongoose.pluralize(null); // collection name을 복수화(-s)하려는 것 강�
 /*var easynote_member_schema = new Schema({
   user_id: { type: String },
   user_pw: { type: String },
-  level: { type: Number, default: 9999 },
+  level: { type: Number, default: 999999999 },
   date: { type: Date, default: Date.now },
 })*/
 var easynote_schema = new Schema({
@@ -47,6 +47,7 @@ var easynote_schema = new Schema({
 function replaceAll(str, searchStr, replaceStr) {
   return str.split(searchStr).join(replaceStr);
 }
+//### session_set_user_id() 등으로 통일할까!?!?!
 function set_session_user_id(req, user_id) {
   console.log(`set_session_user_id(${user_id})`)
   if (req.session.user_id) {
@@ -56,6 +57,13 @@ function set_session_user_id(req, user_id) {
       console.log('easynote.member user set session')
       req.session.user_id = user_id;
   }
+}
+function session_set_user_level(req, user_level) {
+  console.log(`set_session_user_level(${user_level})`)
+  req.session.user_level = user_level;
+}
+function session_get_user_level(req) {
+  return Number(req.session.user_level);
 }
 function set_session_admin_id(req, admin_id) {
   console.log(`set_session_admin_id(${admin_id})`)
@@ -67,32 +75,75 @@ function set_session_admin_id(req, admin_id) {
       req.session.admin_id = admin_id;
   }
 }
-function set_user_readable(req, readable) {
-  console.log(`set_user_readable(${readable})`)
-  req.session.user_readable = readable;
-}
+//function set_user_readable(req, readable) {
+//  console.log(`set_user_readable(${readable})`)
+//  req.session.user_readable = readable;
+//}
 function set_user_writable(req, writable) {
   console.log(`set_user_writable(${writable})`)
   req.session.user_writable = writable;
 }
 function is_user_login(req) {
+  console.log(`is_user_login() session.user_id = ${req.session.user_id}`)
   return req.session.user_id
 }
 function is_admin_login(req) {
   return req.session.admin_id;
 }
-function is_user_readable(req) {
-  return req.session.user_readable;
+async function is_user_readable(req) {
+  var ret_readable = false;
+
+  //@@ 이게 여기있으면 안되긴한다.. 함수 호출시마다 매번 쿼리를 처리하므로..
+  // easynote config
+  let easynoteLevelReadStart = 0;
+  let easynoteLevelReadEnd = 0;
+  let easynoteLevelWriteStart = 0;
+  let easynoteLevelWriteEnd = 0;
+  let data = await easynoteConfigFindOne({'num':0})
+  console.log(data)
+  if (data == null) { // error: no config
+    console.log('no easynote config.')
+  }
+  else {
+    console.log('easynote config exists.')
+
+    console.log(data['note'])
+    if (is_json_string(data['note'])) {
+      console.log('easynote config is correct json string.')
+      var note = JSON.parse(data['note'])
+
+      // level
+      if (note['level_read_start']) { easynoteLevelReadStart = Number(note['level_read_start']); }
+      if (note['level_read_end']) { easynoteLevelReadEnd = Number(note['level_read_end']); }
+      if (note['level_write_start']) { easynoteLevelWriteStart = Number(note['level_write_start']); }
+      if (note['level_write_end']) { easynoteLevelWriteEnd = Number(note['level_write_end']); }
+    }
+  }
+  console.log('easynote level read = ' + easynoteLevelReadStart + ' ~ ' + easynoteLevelReadEnd)
+  console.log('easynote level write = ' + easynoteLevelWriteStart + ' ~ ' + easynoteLevelWriteEnd)
+
+  //@@ 임시 level 동일한 경우 볼수있는 것으로..
+  var user_level = session_get_user_level(req);
+  if (easynoteLevelReadStart <= user_level && user_level <= easynoteLevelReadEnd)
+  {
+    ret_readable = true;
+  }
+
+  console.log('user level = ' + user_level)
+  console.log('ret_readable = ' + ret_readable)
+  
+  return ret_readable;
 }
 function is_user_writable(req) {
   return req.session.user_writable;
 }
 function user_logout(req) {
   req.session.user_id = null;
+  req.session.user_level = null;
   req.session.admin_id = null;
   console.log(`user_logout() success`)
 }
-function session_destroy(req) {
+function session_destroy(req) { // user_logout() 상동. 단지 한번에 모두 파괴.
   req.session.destroy(() => {
       //res.redirect('/');
   })
@@ -109,6 +160,16 @@ function is_json_string(str) {
 }
 
 
+var easynoteConfigFindOne = function(query) {
+  // easynote.config
+  // "level": "1<=level<=999999999" - 이런형태로 설정??? 일단 동일 level인 경우 볼수 있도록..
+  var easynoteLevel = "999999999";
+  EasynoteConfig = mongoose.model('easynote', easynote_schema);
+  var easynoteConfig = new EasynoteConfig();
+  return EasynoteConfig.findOne(query);
+}
+
+
 //############################
 // easynote pages
 //############################
@@ -116,12 +177,14 @@ function is_json_string(str) {
 router.get('/', (req, res, next) => {
   console.log(`${req.url} | easynote page`)
 
-  mongoose.connection.db.listCollections({name: 'easynote'}).next(function(err, collinfo) {
+  mongoose.connection.db.listCollections({name: 'easynote'}).next(async function(err, collinfo) {
     if (collinfo) {
       console.log(`easynote collection exists.`)
-      
+
+      //@@ 사실 is_user_readable(req, collectionName)을 전달하여 내부적으로 처리하고 싶은데.. 아직 능력이 없다 ㅠ.
+      //   추후 refactoring?? 처럼 전체적인 코드 정리는 필요할 듯..
       let html = null;
-      if (is_admin_login(req) || (is_user_login(req) && is_user_readable(req))) {
+      if (is_admin_login(req) || (is_user_login(req) && await is_user_readable(req))) {
         html = fs.readFileSync(_env.ROOT + '/easynote/list.html', 'utf8');
       }
       else {
@@ -493,13 +556,17 @@ router.post('/login', (req, res, next) => {
 
                 console.log(data['note'])
                 if (is_json_string(data['note'])) {
-                  console.log('json string right.')
+                  console.log('easynote.note data is correct json string.')
                   var note = JSON.parse(data['note'])
 
-                  // session for admin_id
+                  // session for level
+                  session_set_user_level(req, note['level']);
                   if (note['level'] == 0) {
                       set_session_admin_id(req, user_id);
                   }
+                }
+                else {
+                  session_set_user_level(req, "999999999"); // default level
                 }
 
                 res.json({
@@ -515,7 +582,7 @@ router.post('/login', (req, res, next) => {
                     }
                 });
 
-            }                
+            }
         }
     })
 });
@@ -930,7 +997,7 @@ router.post('/read', function(req, res, next) {
     console.log(num_post);
 
     Easynote = mongoose.model('easynote', easynote_schema);
-    Easynote.findOne({'num':num_post}, function(err, data) {
+    Easynote.findOne({'num':num_post}, async function(err, data) {
         if (err) { res.send(err); }
         else {
             console.log(data)
@@ -952,9 +1019,9 @@ router.post('/read', function(req, res, next) {
                             {
                                 'num_link': data['num_link'],
                                 'num': data['num'],
-                                'name': ((is_admin_login(req) || (is_user_login(req) && is_user_readable(req))) ? data['name'] : '*** private ***'),
-                                'note': ((is_admin_login(req) || (is_user_login(req) && is_user_readable(req))) ? data['note'] : '*** private ***'),
-                                'user_id': ((is_admin_login(req) || (is_user_login(req) && is_user_readable(req))) ? data['user_id'] : '*** private ***'),
+                                'name': ((is_admin_login(req) || (is_user_login(req) && await is_user_readable(req))) ? data['name'] : '*** private ***'),
+                                'note': ((is_admin_login(req) || (is_user_login(req) && await is_user_readable(req))) ? data['note'] : '*** private ***'),
+                                'user_id': ((is_admin_login(req) || (is_user_login(req) && await is_user_readable(req))) ? data['user_id'] : '*** private ***'),
                                 'date': data['date']
                             },
                         ]
@@ -979,7 +1046,7 @@ router.post('/list', function(req, res, next) {
     Easynote = mongoose.model('easynote', easynote_schema);
     //Easynote.find({'num':{ $gte : 1 }, $text:{ $search : search_word }}).limit(per_page).skip(per_page * page).sort({ date:-1 }).exec(function(err, data) { // search_word : schema의 index 필요 document에서 $text를 찾기위해 필요함.
     //Easynote.find({ 'num':{$gte:1}, 'name':{$regex:search_word,$options:'i'} }).limit(per_page).skip(per_page * page).sort({ date:-1 }).exec(function(err, data) { // name only OK
-    Easynote.find({ 'num':{$gte:1}, $or:[{'name':{$regex:search_word,$options:'i'}}, {'note':{$regex:search_word,$options:'i'}}] }).limit(per_page).skip(per_page * page).sort({ date:-1 }).exec(function(err, data) { // $or OK
+    Easynote.find({ 'num':{$gte:1}, $or:[{'name':{$regex:search_word,$options:'i'}}, {'note':{$regex:search_word,$options:'i'}}] }).limit(per_page).skip(per_page * page).sort({ date:-1 }).exec(async function(err, data) { // $or OK
         if (err) {
           console.log('easynote find() error. err=' + err)
           res.json({
@@ -1008,9 +1075,9 @@ router.post('/list', function(req, res, next) {
                   let dict = {
                       'num_link': data[i]['num_link'],
                       'num': data[i]['num'],
-                      'name': ((is_admin_login(req) || (is_user_login(req) && is_user_readable(req))) ? data[i]['name'] : '*** private ***'),
-                      'note': ((is_admin_login(req) || (is_user_login(req) && is_user_readable(req))) ? data[i]['note'] : '*** private ***'),
-                      'user_id': ((is_admin_login(req) || (is_user_login(req) && is_user_readable(req))) ? data[i]['user_id'] : '*** private ***'),
+                      'name': ((is_admin_login(req) || (is_user_login(req) && await is_user_readable(req))) ? data[i]['name'] : '*** private ***'),
+                      'note': ((is_admin_login(req) || (is_user_login(req) && await is_user_readable(req))) ? data[i]['note'] : '*** private ***'),
+                      'user_id': ((is_admin_login(req) || (is_user_login(req) && await is_user_readable(req))) ? data[i]['user_id'] : '*** private ***'),
                       'date': data[i]['date']
                   }
                   datalist[i] = dict;

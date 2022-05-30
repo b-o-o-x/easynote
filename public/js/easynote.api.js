@@ -119,7 +119,7 @@ function easynote_set_system_date(d) {
           if (show_response_message) alert(message)
         }
         else {
-          alert(message)
+          alert(message) //@@나중에는 막자..
         }
       },
       error: function() {

@@ -5,6 +5,8 @@
   + [ ] 관리자: note.num=0 보이기 및 crud. note={"user_readable":"false", "user_writable":"false"} 수정할 수 있도록
   + [ ] 관리자: welcome 생성시 member.name='admin', note.num=0 생성 with {"user_readable":"false", "user_writable":"false"}
   + [ ] 로그인 멤버 readable, writable -> 테스트
+  + [ ] easynote.member 저장시 note의 JSON 체크
+  + [ ] user login() 여부와 readable() 여부는 구분하여 페이지 띄워줄 필요 있을듯..
   + [ ] 버전기능 (/easynote/v1/ 등 관리)
   + [O] ajax 무한스크롤링
   + [o] 검색 (한글자 입력할때마다 가져오도록!? 멋지겠는걸!)
