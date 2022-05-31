@@ -24,6 +24,18 @@
       easynote_set_root('[root]')
       easynote_set_system_date([system_date])
 
+      // admin check
+      $('.loginbox').hide();
+      $('.logoutbox').hide();
+      var isadmin = easynote_api_is_admin();
+      if (isadmin) {
+        $('.logoutbox').show();
+      }
+      else {
+        easynote_page_login();
+        return;
+      }
+
       $('.list-group').empty();
       read_easynote_member([num]);
     });
@@ -65,9 +77,12 @@
     <fieldset>
       <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
+          <div class="loginbox"><li class="breadcrumb-item"><a href="[root]/login">login</a></li></div>
+          <div class="logoutbox"><li class="breadcrumb-item"><a href="#" onclick="easynote_api_logout('[root]')">logout</a></li></div>
+          &nbsp; | &nbsp;
           <li class="breadcrumb-item"><a href="[root]">home</a></li>
           <li class="breadcrumb-item"><a href="[root]/admin">admin</a></li>
-          <li class="breadcrumb-item"><a href="#">member</a></li>
+          <li class="breadcrumb-item"><a href="[root]/admin/member">member</a></li>
           <li class="breadcrumb-item"><a href="#">read</a></li>
         </ol>
       </nav>

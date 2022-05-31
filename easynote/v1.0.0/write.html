@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8">
 
-  <title>easynote | admin | member | write</title>
+  <title>easynote | write</title>
 
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
   <script src='//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js'></script>
@@ -57,11 +57,29 @@
       easynote_set_root('[root]')
       easynote_set_system_date([system_date])
 
+      // login check
+      $('.loginbox').hide();
+      $('.logoutbox').hide();
+      var islogin = easynote_api_is_login();
+      if (islogin) {
+          $('.logoutbox').show();
+      }
+      else {
+          $('.loginbox').show();
+      }
+
+      // writable
+      $(".container").hide();
+      var user_writable = easynote_api_is_writable([num]);
+      if (user_writable) {
+        $(".container").show();
+      }
+
       var id_obj = $('#id');
 
       var num = [num];
       if (num != null && 0 <= num) {
-        read_easynote_member_for_edit(num);
+        read_easynote_for_edit(num);
         if (num == 0) $('#delete').hide();
       }
       else {
@@ -69,12 +87,11 @@
       }
     });
 
-    function read_easynote_member_for_edit(num) {
+    function read_easynote_for_edit(num) {
       var name_obj = $('#name');
       var note_obj = $('#note');
-      var user_id_obj = $('#user_id');
 
-      var row = easynote_api_admin_member_read(num)
+      var row = easynote_api_note_read(num)
 
       if (1 <= row.length) {
         var num_link = row[0]['num_link']
@@ -86,7 +103,6 @@
 
         name_obj.val(name);
         note_obj.val(note);
-        user_id_obj.val(user_id);
       }
     }
 
@@ -111,8 +127,8 @@
   
 <div class="popup">
   <div class="content">
-    <p>do you really want to delete this member??</p>
-    <button id="close" onclick="easynote_api_admin_member_delete([num])">yes</button>
+    <p>do you really want to delete this node??</p>
+    <button id="close" onclick="easynote_api_note_delete([num])">yes</button>
     <button id="close" onclick="hide_popup()">no</button>
   </div>
 </div>
@@ -123,24 +139,28 @@
     <fieldset>
       <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
+          <div class="adminbox"><li class="breadcrumb-item"><a href="[root]/admin">admin</a></li></div>
+          &nbsp; | &nbsp;
+          <div class="loginbox"><li class="breadcrumb-item"><a href="[root]/login">login</a></li></div>
+          <div class="logoutbox"><li class="breadcrumb-item"><a href="#" onclick="easynote_api_logout('[root]')">logout</a></li></div>
+          &nbsp; | &nbsp;
           <li class="breadcrumb-item"><a href="[root]">home</a></li>
-          <li class="breadcrumb-item"><a href="[root]/admin">admin</a></li>
-          <li class="breadcrumb-item"><a href="#">member</a></li>
-          <li class="breadcrumb-item"><a href="#">write</a></li>
+          <li class="breadcrumb-item"><a href="[root]/write">write</a></li>
+          <li class="breadcrumb-item"><a href="#">[num]</a></li>
         </ol>
       </nav>
    
 
-      <h2 class="fs-title">Easynote.member Create</h2>
+      <h2 class="fs-title">Easynote Write</h2>
       <hr class="title-underline">
-      <h3 class="fs-subtitle">This is an easynote.member create page.</h3>
+      <h3 class="fs-subtitle">This is an easynote write page.</h3>
 
       
       <div class="container">
         <div class="buttons">
           <div class="d-grid gap-2 d-md-block">
-            <button class="btn btn-primary" type="button" onclick="easynote_api_admin_member_save([num])">save</button>
-            <button class="btn btn-primary" type="button" onclick="easynote_api_admin_member_save_cancel([num])">cancel</button> |
+            <button class="btn btn-primary" type="button" onclick="easynote_api_note_save([num])">save</button>
+            <button class="btn btn-primary" type="button" onclick="easynote_api_note_save_cancel([num])">cancel</button> |
             <button class="btn btn-primary" type="button" id="delete" onclick="show_popup()">delete</button>
           </div>
         </div>
@@ -148,20 +168,14 @@
 
         <div class="input-group flex-nowrap">
           <span class="input-group-text" id="addon-wrapping">name</span>
-          <input type="text" class="form-control" id="name" placeholder="member name" aria-label="name" aria-describedby="addon-wrapping">
+          <input type="text" class="form-control" id="name" placeholder="note name" aria-label="name" aria-describedby="addon-wrapping">
         </div>
 
         <div class="input-group">
           <span class="input-group-text">note</span>
           <textarea class="form-control note" id="note" aria-label="With textarea" placeholder="note contents"></textarea>
         </div>
-
-        <div class="input-group flex-nowrap">
-          <span class="input-group-text" id="addon-wrapping">user_id</span>
-          <input type="text" class="form-control" id="user_id" placeholder="member email" aria-label="user_id" aria-describedby="addon-wrapping">
-          <span class="input-group-text" id="addon-wrapping">user_pw</span>
-          <input type="password" class="form-control" id="user_pw" placeholder="member password" aria-label="user_pw" aria-describedby="addon-wrapping">
-        </div>
+      </div>
 
     </fieldset>
   </form>

@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="utf-8" />
+
+  <title>easynote | admin</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+  <script src='//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js'></script>
+  <script src='//cdnjs.cloudflare.com/ajax/libs/jquery-easing/1.3/jquery.easing.min.js'></script>
+
+  <link rel="stylesheet" href="[root]/css/easynote.css">
+  <script src="[root]/js/easynote.api.js"></script>
+
+  <style>
+    /* list 전용 임시 */
+    #msform {
+      width: 100%;
+      margin: 50px auto;
+      text-align: left;
+      /*text-align: center;*/
+      position: relative;
+    }
+
+    .container {
+      width: 100%;
+      margin: auto;
+      padding: 10px;
+      /*border: 1px solid #fff;*/
+    }
+    .list-group-item {
+      text-align: left;
+    }
+  </style>  
+  
+  <script>
+    $(document).ready(function () {
+      easynote_set_root('[root]')
+      easynote_set_system_date([system_date])
+
+      $('.list-group').empty(); // sample
+
+      // admin check
+      $('.loginbox').hide();
+      $('.logoutbox').hide();
+      var isadmin = easynote_api_is_admin();
+      if (isadmin) {
+        $('.logoutbox').show();
+      }
+      else {
+        easynote_page_login();
+        return;
+      }
+
+      // easynote.member list
+      easynote_list_scroll_page = easynote_api_admin_member_list(easynote_list_scroll_page);
+
+      // Scroll
+      $(window).scroll(function(){
+        var scrollNow = $(window).scrollTop();
+        let scrollTop = $(window).scrollTop();
+        let windowHeight = $(window).height();
+        let documentHeight = $(document).height();
+
+        //if (scrollNow + $(window).height() + 100 >= $('#mainPage').height()){
+        if (scrollNow + $(window).height() + 100 >= $(document).height()) {
+          easynote_list_scroll_page = easynote_api_admin_member_list(easynote_list_scroll_page, easynote_list_search_word)
+        }
+      })
+    });
+
+    //setTimeout(function() {
+    const intervalId = setInterval(function() {
+      if ($(document).height() <= $(window).height()) { // no scroll
+        var next_page = easynote_api_admin_member_list(easynote_list_scroll_page, easynote_list_search_word)
+        if (easynote_list_scroll_page == next_page) { // end page
+          clearInterval(intervalId)
+        }
+        else {
+          easynote_list_scroll_page = next_page
+        }
+      }
+    }, 500);
+</script>
+</head>
+
+<body>
+
+<!-- multistep form -->
+<form id="msform">
+    <!-- fieldsets -->
+    <fieldset>
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+          <div class="loginbox"><li class="breadcrumb-item"><a href="[root]/login">login</a></li></div>
+          <div class="logoutbox"><li class="breadcrumb-item"><a href="#" onclick="easynote_api_logout('[root]')">logout</a></li></div>
+          &nbsp; | &nbsp;
+          <li class="breadcrumb-item"><a href="[root]">home</a></li>
+          <li class="breadcrumb-item"><a href="[root]/admin">admin</a></li>
+          <li class="breadcrumb-item"><a href="[root]/admin/member">member</a></li>
+        </ol>
+      </nav>
+      
+
+      <h2 class="fs-title">Easynote.member List</h2>
+      <hr class="title-underline">
+      <h3 class="fs-subtitle">This is an easynote.member list page. You can scroll for paging.</h3>
+      
+      <div class="container">
+        <div class="buttons">
+          <div class="d-grid gap-2 d-md-block">
+            <button class="btn btn-primary" type="button" onclick="easynote_page_admin_member_write()">create</button>
+          </div>
+        </div>
+        <br>
+        <div class="buttons">
+          <div class="input-group mb-3">
+            <span class="input-group-text" id="basic-addon1">search</span>
+            <input type="text" id="search-word" class="form-control" placeholder="search word" aria-label="searchword" aria-describedby="basic-addon1">
+          </div>
+        </div>
+        <br>
+
+        <div class="list-group">
+          <a href="#" onclick="easynote_page_read(0)" class="list-group-item list-group-item-action active" aria-current="true">
+            <div class="d-flex w-100 justify-content-between">
+              <small>#3</small>
+              <h5 class="mb-1">테스트 제목</h5>
+              <small>3 days ago</small>
+            </div>
+            <pre class="mb-1">테스트\n간단한 내용 보이기..\n블라블라</pre>
+            <small>..더보기..</small>
+          </a>
+        </div>
+      </div>
+      
+
+    </fieldset>
+  </form>
+  
+<script>
+$("#search-word").on('input', function() {
+  $('.list-group').empty(); // sample
+  easynote_list_scroll_page = 1;
+  easynote_list_search_word = $(this).val();
+  easynote_list_scroll_page = easynote_api_admin_member_list(easynote_list_scroll_page, easynote_list_search_word)
+
+  const intervalId = setInterval(function() {
+    if ($(document).height() <= $(window).height()) { // no scroll
+      var next_page = easynote_api_admin_member_list(easynote_list_scroll_page, easynote_list_search_word)
+      if (easynote_list_scroll_page == next_page) { // end page
+        clearInterval(intervalId)
+      }
+      else {
+        easynote_list_scroll_page = next_page
+      }
+    }
+  }, 500);
+});
+</script>
+</body>
+
+</html>
+

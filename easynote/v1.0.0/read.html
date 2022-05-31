@@ -24,6 +24,24 @@
       easynote_set_root('[root]')
       easynote_set_system_date([system_date])
 
+      // login check
+      $('.loginbox').hide();
+      $('.logoutbox').hide();
+      var islogin = easynote_api_is_login();
+      if (islogin) {
+          $('.logoutbox').show();
+      }
+      else {
+          $('.loginbox').show();
+      }
+
+      // writable
+      $("#editbutton").hide();
+      var user_writable = easynote_api_is_writable([num]);
+      if (user_writable) {
+        $("#editbutton").show();
+      }
+
       $('.list-group').empty();
       read_easynote([num]);
     });
@@ -65,8 +83,14 @@
     <fieldset>
       <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
+          <div class="adminbox"><li class="breadcrumb-item"><a href="[root]/admin">admin</a></li></div>
+          &nbsp; | &nbsp;
+          <div class="loginbox"><li class="breadcrumb-item"><a href="[root]/login">login</a></li></div>
+          <div class="logoutbox"><li class="breadcrumb-item"><a href="#" onclick="easynote_api_logout('[root]')">logout</a></li></div>
+          &nbsp; | &nbsp;
           <li class="breadcrumb-item"><a href="[root]">home</a></li>
           <li class="breadcrumb-item"><a href="#">read</a></li>
+          <li class="breadcrumb-item"><a href="#">[num]</a></li>
         </ol>
       </nav>
       
@@ -80,7 +104,7 @@
         <div class="buttons">
           <div class="d-grid gap-2 d-md-block">
             <button class="btn btn-primary" type="button" onclick="easynote_page_list()">list</button> |
-            <button class="btn btn-primary" type="button" onclick="easynote_page_edit([num])">edit</button>
+            <button class="btn btn-primary" id="editbutton" type="button" onclick="easynote_page_edit([num])">edit</button>
           </div>
         </div>
         <br>

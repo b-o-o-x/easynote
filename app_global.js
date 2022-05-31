@@ -16,7 +16,7 @@ module.exports = {
 	// init() 함수를 노출해주고 var m = require('modules.js'); m.init() 호출 방식.. 다른 module.exports 된것을 사용가능.
 	init: function () {
 		//app.use(express.static('/home/node/app/public'))
-		app.use('/easynote', express.static('/home/node/app/easynote.app/public'))
+		app.use('/easynote', express.static('/home/node/app/easynote.app/easynote/v1.0.0/public'))
 		app.use(express.json())
 
 		// express - post 데이터 처리 사용

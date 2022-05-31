@@ -55,7 +55,7 @@ app.get('/', function(req, res, next) {
 })
 
 // easynote
-app.use('/easynote', require('./easynote/easynote'));
+app.use('/easynote', require('./easynote/v1.0.0/easynote'));
 
 // easynote.multi=tail
 app.use('/easynote-multi-tail', require('./easynote-multi-tail/easynote'));

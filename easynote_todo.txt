@@ -1,16 +1,22 @@
 
 [ ] easynote
+  ---------- 필수 ----------
   + [o] api.js 통합 (list, login, read, welcome, write)
-  + [O] 관리자만 수정,삭제
-  + [ ] 관리자: note.num=0 보이기 및 crud. note={"user_readable":"false", "user_writable":"false"} 수정할 수 있도록
-  + [ ] 관리자: welcome 생성시 member.name='admin', note.num=0 생성 with {"user_readable":"false", "user_writable":"false"}
-  + [ ] 로그인 멤버 readable, writable -> 테스트
-  + [ ] easynote.member 저장시 note의 JSON 체크
-  + [ ] user login() 여부와 readable() 여부는 구분하여 페이지 띄워줄 필요 있을듯..
-  + [ ] 버전기능 (/easynote/v1/ 등 관리)
+  + [o] 관리자만 수정,삭제
+  + [o] 관리자: easynote list 상단 config(note.num=0) 보이기 및 crud.
+  + [o] admin: member crud & login-in (직접 가입가능은 확장된 easynote에서 필요시 만들어 사용하자)
+  + [o] 관리자: member 생성시 기본 note={"level":"999999999"}
+  + [o] 관리자: welcome 생성시 member 생성(name='admin'), config 생성(note.num=0 with {"level_read_start":"10", "level_read_end":"10"} write동일
+  + [o] 로그인 멤버 readable, writable -> 테스트 ok.
+  + [o] 매니저 기능 추가 완료. "level_manager". easynote 자체 관리 가능. admin 사용불가.
+  + [o] 버전기능 (/easynote/v1.0.0/ 등)
   + [O] ajax 무한스크롤링
   + [o] 검색 (한글자 입력할때마다 가져오도록!? 멋지겠는걸!)
-  + [o] admin: member crud & login-in (직접 가입가능은 확장된 easynote에서 필요시 만들어 사용하자)
+  + [o] easynote.member 및 .config 저장시 note의 JSON 체크하기
+  + [ ] console.log() 정리
+  + [ ] refactoring..
+  ---------- 필수아님 ----------
+  + [ ] user login() 여부와 readable() 여부는 구분하여 페이지 띄워줄 필요 있을듯..
   + [ ] login: email check & email 인증?
   + [ ] alert()창을 상단 메시지바 등으로 처리 고려..
   + [ ] html, css minimal화 하기..

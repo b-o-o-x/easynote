@@ -119,7 +119,109 @@ function easynote_set_system_date(d) {
           if (show_response_message) alert(message)
         }
         else {
-          alert(message) //@@나중에는 막자..
+          //alert(message)
+        }
+      },
+      error: function() {
+        ret = false;
+      }
+    })
+
+    return ret;
+  }
+
+  // manager check
+  function easynote_api_is_manager() {
+    var ret = false;
+
+    $.ajax({
+      url: easynote_root + "/ismanager",
+      type: "POST",
+      async: false,
+      cache: false,
+      timeout: 3000,
+      data: { },
+      success: function (response) {
+        var result = response['result']
+        var success = result['success']
+        var message = result['message']
+        var row = result['row']
+
+        ret = success;
+
+        if (success == true) {
+          if (show_response_message) alert(message)
+        }
+        else {
+          //alert(message)
+        }
+      },
+      error: function() {
+        ret = false;
+      }
+    })
+
+    return ret;
+  }
+
+  // check readable
+  function easynote_api_is_readable() {
+    var ret = false;
+
+    $.ajax({
+      url: easynote_root + "/isreadable",
+      type: "POST",
+      async: false,
+      cache: false,
+      timeout: 3000,
+      data: { },
+      success: function (response) {
+        var result = response['result']
+        var success = result['success']
+        var message = result['message']
+        var row = result['row']
+
+        ret = success;
+
+        if (success == true) {
+          if (show_response_message) alert(message)
+        }
+        else {
+          //alert(message)
+        }
+      },
+      error: function() {
+        ret = false;
+      }
+    })
+
+    return ret;
+  }
+
+  // check writable
+  function easynote_api_is_writable(num) {
+    var ret = false;
+
+    $.ajax({
+      url: easynote_root + "/iswritable",
+      type: "POST",
+      async: false,
+      cache: false,
+      timeout: 3000,
+      data: { 'num' : num },
+      success: function (response) {
+        var result = response['result']
+        var success = result['success']
+        var message = result['message']
+        var row = result['row']
+
+        ret = success;
+
+        if (success == true) {
+          if (show_response_message) alert(message)
+        }
+        else {
+          //alert(message)
         }
       },
       error: function() {
@@ -617,7 +719,7 @@ function easynote_set_system_date(d) {
       user_id_obj.focus();
       return;
     }
-    else if (!user_pw_obj.val())
+    else if (num == null && !user_pw_obj.val())
     {
       user_pw_obj.focus();
       return;
