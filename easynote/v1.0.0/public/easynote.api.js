@@ -16,22 +16,8 @@ function easynote_set_system_date(d) {
 // easynote api : system
 {
   // login for welcome.html, login.html only
-  function easynote_api_login() {
+  function easynote_api_login(id, pw) {
     var ret = false;
-
-    var user_id_obj = $('#user_id');
-    var user_pw_obj = $('#user_pw');
-
-    if (!user_id_obj.val())
-    {
-      user_id_obj.focus();
-      return;
-    }
-    else if (!user_pw_obj.val())
-    {
-      user_pw_obj.focus();
-      return;
-    }
 
     $.ajax({
       url: easynote_root + "/login",
@@ -40,8 +26,8 @@ function easynote_set_system_date(d) {
       cache: false,
       timeout: 3000,
       data: {
-        'user_id': user_id_obj.val(),
-        'user_pw': user_pw_obj.val(),
+        'user_id': id,
+        'user_pw': pw,
       },
       success: function (response) {
         var result = response['result']
@@ -286,36 +272,9 @@ function easynote_set_system_date(d) {
     return ret;
   }
 
-  // create easynote.member for welcome.html only
-  function easynote_api_create_easynote_member() {
+  // create easynote.member admin for welcome.html only
+  function easynote_api_create_easynote_admin(admin_id, admin_pw) {
     var ret = false;
-
-    var admin_id_obj = $('#admin_id');
-    var admin_pw_obj = $('#admin_pw');
-    var admin_cpw_obj = $('#admin_cpw');
-    
-    if (!admin_id_obj.val())
-    {
-      admin_id_obj.focus();
-      return;
-    }
-    else if (!admin_pw_obj.val())
-    {
-      admin_pw_obj.focus();
-      return;
-    }
-    else if (!admin_cpw_obj.val())
-    {
-      admin_cpw_obj.focus();
-      return;
-    }
-    else if (!admin_pw_obj.val() || (admin_pw_obj.val() != admin_cpw_obj.val())) {
-      alert('Password is different.')
-      admin_pw_obj.val('');
-      admin_cpw_obj.val('');
-      admin_pw_obj.focus();
-      return;
-    }
 
     $.ajax({
       url: easynote_root + "/create?collection=easynote.member",
@@ -324,8 +283,8 @@ function easynote_set_system_date(d) {
       cache: false,
       timeout: 3000,
       data: {
-        'admin_id': admin_id_obj.val(),
-        'admin_pw': admin_pw_obj.val(),
+        'admin_id': admin_id,
+        'admin_pw': admin_pw,
       },
       success: function (response) {
         var result = response['result']
@@ -384,9 +343,6 @@ function easynote_set_system_date(d) {
   // read note
   function easynote_api_note_read(num) {
     var ret = null
-
-    var name_obj = $('#name');
-    var note_obj = $('#note');
     
     // read api
     $.ajax({
@@ -429,21 +385,7 @@ function easynote_set_system_date(d) {
   }
 
   // save note for write.html only
-  function easynote_api_note_save(num) {
-    var name_obj = $('#name');
-    var note_obj = $('#note');
-
-    if (!name_obj.val())
-    {
-      name_obj.focus();
-      return;
-    }
-    else if (!note_obj.val())
-    {
-      note_obj.focus();
-      return;
-    }
-
+  function easynote_api_note_save(num, name, note) {
     var ajax_type = 'POST'; // save new
     if (num != null && 0 <= num) ajax_type = 'PUT'; // edit
 
@@ -452,8 +394,8 @@ function easynote_set_system_date(d) {
       url: easynote_root + "/write",
       data: {
         'num': num,
-        'name': name_obj.val(),
-        'note': note_obj.val(),
+        'name': name,
+        'note': note,
       },
       success: function (response) {
         var result = response['result']
@@ -471,26 +413,6 @@ function easynote_set_system_date(d) {
         }
       }
     })
-  }
-
-  // cancel save for write.html only
-  function easynote_api_note_save_cancel(num) {
-    var name_obj = $('#name');
-    var note_obj = $('#note');
-
-    var confirmflag = true;
-    if (name_obj.val() || note_obj.val()) {
-      confirmflag = confirm('There is an note being written. Do you really want to go out?');
-    }
-
-    if (confirmflag == true) {
-      if (num != null && 0 <= num) {
-        easynote_page_read(num)
-      }
-      else {
-        easynote_page_root()
-      }
-    }
   }
 
   // delete note for write.html only
@@ -521,136 +443,56 @@ function easynote_set_system_date(d) {
 
   // list.html 전용.
   function easynote_api_note_list(page, search_word = '') {
-    var ret_next_page = page;
+    var ret_response = null;
+    
     // list api
     if (!easynote_list_loading) {
       easynote_list_loading = true;
       $.ajax({
-          url: easynote_root + "/list",
-          type: "POST",
-          async: false,
-          cache: false,
-          timeout: 3000,
-          data: {
-            'page': page,
-            'search_word': search_word,
-          },
-          success: function (response) {
-            var result = response["result"]
-            var success = result['success']
-            var message = result['message']
-            var row = result['row']
-
-            if (success == true) {
-              for (let i = 0; i < row.length; i++) {
-                let num = row[i]['num']
-                let name = row[i]['name']
-                let note = row[i]['note']
-                let user_id = row[i]['user_id']
-                let date = row[i]['date']
-
-                var notelist = note.split("\n");
-                var display_note = '';
-                for(var j = 0; j < notelist.length && j < 3; j++) { // 3줄만 표시
-                  display_note += notelist[j] + "<br>";
-                }
-
-                // display time
-                var sysdate = new Date(easynote_system_date);
-                var display_date = getYYYYMMDD_HHIISS(new Date(date));
-                var day_gap = calcDateDiff('day', sysdate, new Date(date));
-                var display_date_gap = (day_gap <= 1) ? day_gap + ' day ago' : day_gap + ' days ago';
-                if (day_gap <= 0) { display_date_gap = display_date; }
-
-                let temp_html = `<a onclick="easynote_page_read(${num})" class="list-group-item list-group-item-action" aria-current="true">
-                                  <div class="d-flex w-100 justify-content-between">
-                                    <small class="mb-num">#${num}</small>
-                                    <h5 class="mb-title">${name}</h5>
-                                    <small class="mb-date">${display_date_gap}</small>
-                                  </div>
-                                  <p class="mb-note">${display_note}</p>
-                                  <small>..더보기..</small><small>${user_id}</small>
-                                </a>`
-                $('.list-group').append(temp_html)
-              }
-
-              ret_next_page += 1;
-            }
-            else {
-              //alert(message);
-            }
-
-            easynote_list_loading = false;
-          }
+        url: easynote_root + "/list",
+        type: "POST",
+        async: false,
+        cache: false,
+        timeout: 3000,
+        data: {
+          'page': page,
+          'search_word': search_word,
+        },
+        success: function (response) {
+          ret_response = response;
+          easynote_list_loading = false;
+        }
       })
     }
 
-    return ret_next_page;
+    return ret_response;
   }
 
   // admin member list
   function easynote_api_admin_member_list(page, search_word = '') {
-    var ret_next_page = page;
+    var ret_response = null;
+
     // member list api
     if (!easynote_list_loading) {
       easynote_list_loading = true;
       $.ajax({
-          url: easynote_root + "/admin/member/list",
-          type: "POST",
-          async: false,
-          cache: false,
-          timeout: 3000,
-          data: {
-            'page': page,
-            'search_word': search_word,
-          },
-          success: function (response) {
-            var result = response["result"]
-            var success = result['success']
-            var message = result['message']
-            var row = result['row']
-
-            if (success == true) {
-              for (let i = 0; i < row.length; i++) {
-                let num = row[i]['num']
-                let name = row[i]['name']
-                let note = row[i]['note']
-                let user_id = row[i]['user_id']
-                let date = row[i]['date']
-
-                var display_note = note;
-
-                // display time
-                var sysdate = new Date(easynote_system_date);
-                var display_date = getYYYYMMDD_HHIISS(new Date(date));
-                var day_gap = calcDateDiff('day', sysdate, new Date(date));
-                var display_date_gap = (day_gap <= 1) ? day_gap + ' day ago' : day_gap + ' days ago';
-                if (day_gap <= 0) { display_date_gap = display_date; }
-
-                let temp_html = `<a onclick="easynote_page_admin_member_read(${num})" class="list-group-item list-group-item-action" aria-current="true">
-                                  <div class="d-flex w-100 justify-content-between">
-                                    <small class="mb-num">#${num}</small>
-                                    <h5 class="mb-title">${name}</h5>
-                                    <small class="mb-date">${display_date_gap}</small>
-                                  </div>
-                                  <p class="mb-note">${display_note}</p>
-                                  <small>${user_id}</small>
-                                </a>`
-                $('.list-group').append(temp_html)
-              }
-
-              ret_next_page += 1;
-            }
-            else {
-              //alert(message);
-            }
-
-            easynote_list_loading = false;
-          }
+        url: easynote_root + "/admin/member/list",
+        type: "POST",
+        async: false,
+        cache: false,
+        timeout: 3000,
+        data: {
+          'page': page,
+          'search_word': search_word,
+        },
+        success: function (response) {
+          ret_response = response;
+          easynote_list_loading = false;
+        }
       })
     }
 
-    return ret_next_page;
+    return ret_response;
   }
 
   // admin read member
@@ -698,33 +540,7 @@ function easynote_set_system_date(d) {
   }
 
   // admin save member
-  function easynote_api_admin_member_save(num) {
-    var name_obj = $('#name');
-    var note_obj = $('#note');
-    var user_id_obj = $('#user_id');
-    var user_pw_obj = $('#user_pw');
-
-    if (!name_obj.val())
-    {
-      name_obj.focus();
-      return;
-    }
-    else if (!note_obj.val())
-    {
-      note_obj.focus();
-      return;
-    }
-    else if (!user_id_obj.val())
-    {
-      user_id_obj.focus();
-      return;
-    }
-    else if (num == null && !user_pw_obj.val())
-    {
-      user_pw_obj.focus();
-      return;
-    }
-
+  function easynote_api_admin_member_save(num, name, note, user_id, user_pw) {
     var ajax_type = 'POST'; // save new
     if (num != null && 0 <= num) ajax_type = 'PUT'; // edit
 
@@ -733,10 +549,10 @@ function easynote_set_system_date(d) {
       url: easynote_root + "/admin/member/write",
       data: {
         'num': num,
-        'name': name_obj.val(),
-        'note': note_obj.val(),
-        'user_id': user_id_obj.val(),
-        'user_pw': user_pw_obj.val(),
+        'name': name,
+        'note': note,
+        'user_id': user_id,
+        'user_pw': user_pw,
       },
       success: function (response) {
         var result = response['result']
@@ -754,26 +570,6 @@ function easynote_set_system_date(d) {
         }
       }
     })
-  }
-
-  // admin cancel save member
-  function easynote_api_admin_member_save_cancel(num) {
-    var name_obj = $('#name');
-    var note_obj = $('#note');
-
-    var confirmflag = true;
-    if (name_obj.val() || note_obj.val()) {
-      confirmflag = confirm('There is an member being written. Do you really want to go out?');
-    }
-
-    if (confirmflag == true) {
-      if (num != null && 0 <= num) {
-        easynote_page_admin_member_read(num)
-      }
-      else {
-        easynote_page_admin()
-      }
-    }
   }
 
   // admin delete member

@@ -1,7 +1,7 @@
 //------------------------------
 // 글로벌 설정 (아래 //전역 설정 // 모듈 설정을 정리차원에서 만들긴 했는데 좀 복잡해지네 -_-;;)
 //------------------------------
-const index_global = require("./app_global.js")
+const index_global = require("./easynote.app_global.js")
 index_global.init();
 
 //#region // 직접 전역,모듈 설정 방식

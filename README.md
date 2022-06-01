@@ -1,2 +1,2 @@
-# easynote
-easynote for easy bbs
+# easynote.app
+easynote.app for easy bbs

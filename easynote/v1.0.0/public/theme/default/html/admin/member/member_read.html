@@ -9,8 +9,9 @@
   <script src='//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js'></script>
   <script src='//cdnjs.cloudflare.com/ajax/libs/jquery-easing/1.3/jquery.easing.min.js'></script>
 
-  <link rel="stylesheet" href="[root]/css/easynote.css">
-  <script src="[root]/js/easynote.api.js"></script>
+  <link rel="stylesheet" href="{{root}}/theme/{{theme}}/css/easynote.css">
+  <script src="{{root}}/easynote.api.js"></script>
+  <script src="{{root}}/theme/{{theme}}/js/easynote.theme.js"></script>
 
   <style>
     #msform {
@@ -21,8 +22,8 @@
 
   <script>
     $(document).ready(function () {
-      easynote_set_root('[root]')
-      easynote_set_system_date([system_date])
+      easynote_set_root('{{root}}')
+      easynote_set_system_date({{system_date}})
 
       // admin check
       $('.loginbox').hide();
@@ -37,7 +38,7 @@
       }
 
       $('.list-group').empty();
-      read_easynote_member([num]);
+      read_easynote_member({{num}});
     });
 
     function read_easynote_member(num) {
@@ -61,7 +62,10 @@
                             <small class="mb-date">${display_date}</small>
                           </div>
                           <pre class="mb-note">${note}</pre>
-                          <small>${user_id}</small>
+                          <div class="d-flex w-100 justify-content-between">
+                            <small></small>
+                            <small class="mb-date">${user_id}</small>
+                          </div>
                         </a>`
         $('.list-group').append(temp_html)
       }
@@ -77,13 +81,14 @@
     <fieldset>
       <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
-          <div class="loginbox"><li class="breadcrumb-item"><a href="[root]/login">login</a></li></div>
-          <div class="logoutbox"><li class="breadcrumb-item"><a href="#" onclick="easynote_api_logout('[root]')">logout</a></li></div>
+          <div class="loginbox"><li class="breadcrumb-item"><a href="{{root}}/login">login</a></li></div>
+          <div class="logoutbox"><li class="breadcrumb-item"><a href="#" onclick="easynote_api_logout('{{root}}')">logout</a></li></div>
           &nbsp; | &nbsp;
-          <li class="breadcrumb-item"><a href="[root]">home</a></li>
-          <li class="breadcrumb-item"><a href="[root]/admin">admin</a></li>
-          <li class="breadcrumb-item"><a href="[root]/admin/member">member</a></li>
+          <li class="breadcrumb-item"><a href="{{root}}">home</a></li>
+          <li class="breadcrumb-item"><a href="{{root}}/admin">admin</a></li>
+          <li class="breadcrumb-item"><a href="{{root}}/admin/member">member</a></li>
           <li class="breadcrumb-item"><a href="#">read</a></li>
+          <li class="breadcrumb-item"><a href="#">{{num}}</a></li>
         </ol>
       </nav>
       
@@ -97,7 +102,7 @@
         <div class="buttons">
           <div class="d-grid gap-2 d-md-block">
             <button class="btn btn-primary" type="button" onclick="easynote_page_admin_member_list()">list</button> |
-            <button class="btn btn-primary" type="button" onclick="easynote_page_admin_member_edit([num])">edit</button>
+            <button class="btn btn-primary" type="button" onclick="easynote_page_admin_member_edit({{num}})">edit</button>
           </div>
         </div>
         <br>

@@ -10,8 +10,9 @@
   <script src='//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js'></script>
   <script src='//cdnjs.cloudflare.com/ajax/libs/jquery-easing/1.3/jquery.easing.min.js'></script>
 
-  <link rel="stylesheet" href="[root]/css/easynote.css">
-  <script src="[root]/js/easynote.api.js"></script>
+  <link rel="stylesheet" href="{{root}}/theme/{{theme}}/css/easynote.css">
+  <script src="{{root}}/easynote.api.js"></script>
+  <script src="{{root}}/theme/{{theme}}/js/easynote.theme.js"></script>
 
   <style>
     /* write 전용 임시 */
@@ -54,8 +55,8 @@
     
   <script>
     $(document).ready(function () {
-      easynote_set_root('[root]')
-      easynote_set_system_date([system_date])
+      easynote_set_root('{{root}}')
+      easynote_set_system_date({{system_date}})
 
       // admin check
       $('.loginbox').hide();
@@ -71,10 +72,13 @@
 
       var id_obj = $('#id');
 
-      var num = [num];
+      var num = {{num}};
       if (num != null && 0 <= num) {
         read_easynote_member_for_edit(num);
         if (num == 0) $('#delete').hide();
+
+        // member pw
+        $('#member_password').text('member password (just leave if not to change)');
       }
       else {
         $('#delete').hide();
@@ -128,7 +132,7 @@
 <div class="popup">
   <div class="content">
     <p>do you really want to delete this member??</p>
-    <button id="close" onclick="easynote_api_admin_member_delete([num])">yes</button>
+    <button id="close" onclick="easynote_api_admin_member_delete({{num}})">yes</button>
     <button id="close" onclick="hide_popup()">no</button>
   </div>
 </div>
@@ -139,13 +143,14 @@
     <fieldset>
       <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
-          <div class="loginbox"><li class="breadcrumb-item"><a href="[root]/login">login</a></li></div>
-          <div class="logoutbox"><li class="breadcrumb-item"><a href="#" onclick="easynote_api_logout('[root]')">logout</a></li></div>
+          <div class="loginbox"><li class="breadcrumb-item"><a href="{{root}}/login">login</a></li></div>
+          <div class="logoutbox"><li class="breadcrumb-item"><a href="#" onclick="easynote_api_logout('{{root}}')">logout</a></li></div>
           &nbsp; | &nbsp;
-          <li class="breadcrumb-item"><a href="[root]">home</a></li>
-          <li class="breadcrumb-item"><a href="[root]/admin">admin</a></li>
-          <li class="breadcrumb-item"><a href="[root]/admin/member">member</a></li>
+          <li class="breadcrumb-item"><a href="{{root}}">home</a></li>
+          <li class="breadcrumb-item"><a href="{{root}}/admin">admin</a></li>
+          <li class="breadcrumb-item"><a href="{{root}}/admin/member">member</a></li>
           <li class="breadcrumb-item"><a href="#">write</a></li>
+          <li class="breadcrumb-item"><a href="#">{{num}}</a></li>
         </ol>
       </nav>
    
@@ -158,28 +163,49 @@
       <div class="container">
         <div class="buttons">
           <div class="d-grid gap-2 d-md-block">
-            <button class="btn btn-primary" type="button" onclick="easynote_api_admin_member_save([num])">save</button>
-            <button class="btn btn-primary" type="button" onclick="easynote_api_admin_member_save_cancel([num])">cancel</button> |
+            <button class="btn btn-primary" type="button" onclick="easynote_theme_admin_member_save({{num}})">save</button>
+            <button class="btn btn-primary" type="button" onclick="easynote_theme_admin_member_save_cancel({{num}})">cancel</button> |
             <button class="btn btn-primary" type="button" id="delete" onclick="show_popup()">delete</button>
           </div>
         </div>
         <br>
 
-        <div class="input-group flex-nowrap">
+        <!--div class="input-group flex-nowrap">
           <span class="input-group-text" id="addon-wrapping">name</span>
           <input type="text" class="form-control" id="name" placeholder="member name" aria-label="name" aria-describedby="addon-wrapping">
         </div>
-
         <div class="input-group">
           <span class="input-group-text">note</span>
           <textarea class="form-control note" id="note" aria-label="With textarea" placeholder="note contents"></textarea>
         </div>
-
         <div class="input-group flex-nowrap">
           <span class="input-group-text" id="addon-wrapping">user_id</span>
           <input type="text" class="form-control" id="user_id" placeholder="member email" aria-label="user_id" aria-describedby="addon-wrapping">
           <span class="input-group-text" id="addon-wrapping">user_pw</span>
           <input type="password" class="form-control" id="user_pw" placeholder="member password" aria-label="user_pw" aria-describedby="addon-wrapping">
+        </div-->
+
+        <div class="form-floating mb-3">
+          <input type="text" class="form-control" id="name" id="floatingInput" placeholder="member name">
+          <label for="floatingInput">member name</label>
+        </div>
+        <div class="form-floating">
+          <textarea class="form-control note" placeholder="note" id="note" id="floatingTextarea2" style="height:300px"></textarea>
+          <label for="floatingTextarea2">note contents</label>
+        </div>
+        <div class="row g-2">
+          <div class="col-md">
+            <div class="form-floating">
+              <input type="text" class="form-control" id="user_id" id="floatingInput" placeholder="member password">
+              <label for="floatingInput">member email</label>
+            </div>
+          </div>
+          <div class="col-md">
+            <div class="form-floating">
+              <input type="text" class="form-control" id="user_pw" id="floatingInput" placeholder="member password">
+              <label for="floatingInput" id="member_password">member password</label>
+            </div>
+          </div>
         </div>
 
     </fieldset>

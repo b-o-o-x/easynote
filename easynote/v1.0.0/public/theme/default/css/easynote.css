@@ -11,14 +11,15 @@ html {
 }
 body {
   font-family: montserrat, arial, verdana;
-  background: linear-gradient(rgba(196, 102, 0, 0.6), rgba(155, 89, 182, 0.6));
+  /*background: linear-gradient(rgba(196, 102, 0, 0.6), rgba(155, 89, 182, 0.6));*/
+  background: linear-gradient(rgba(0, 85, 196, 0.6), rgba(155, 89, 182, 0.6));
   background-repeat: repeat;
   background-attachment: fixed;
   overflow-y: overlay;
 }
 /*form styles*/
 #msform {
-  width: 400px;
+  width: 500px;
   margin: 50px auto;
   text-align: center;
   position: relative;
@@ -63,6 +64,9 @@ body {
   cursor: pointer;
   padding: 10px 5px;
   margin: 10px 5px;
+
+  white-space: pre-wrap;
+  word-wrap: break-word;
 }
 #msform .action-button:hover, #msform .action-button:focus {
   box-shadow: 0 0 0 2px white, 0 0 0 3px #27AE60;
@@ -92,7 +96,8 @@ body {
   color: white;
   text-transform: uppercase;
   font-size: 9px;
-  width: 33.33%;
+  /*width: 33.33%;*/
+  width: 25%;
   float: left;
   position: relative;
 }
@@ -156,15 +161,17 @@ body {
   color: #333;
 }
 .mb-num {
-width: 50px;
-text-align: center;
+  width: 50px;
+  text-align: center;
 }
 .mb-title {
-width: auto; /* 80% */
-text-align: left;
+  width: auto; /* 80% */
+  text-align: left;
 }
 .mb-note {
-font-size: 14px;
+  font-size: 14px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
 }
 
 

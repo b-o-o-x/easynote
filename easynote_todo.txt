@@ -13,11 +13,14 @@
   + [O] ajax 무한스크롤링
   + [o] 검색 (한글자 입력할때마다 가져오도록!? 멋지겠는걸!)
   + [o] easynote.member 및 .config 저장시 note의 JSON 체크하기
-  + [ ] console.log() 정리
+  + [o] console.log() 정리
+  + [o] theme 기능
+  + [o] [root],[theme],[system_date],[num] => {{num}}
   + [ ] refactoring..
+  + [ ] 비회원 보기??? 메인 홈페이지에서 보이기 해서 공지사항으로 사용 가능..
   ---------- 필수아님 ----------
-  + [ ] user login() 여부와 readable() 여부는 구분하여 페이지 띄워줄 필요 있을듯..
-  + [ ] login: email check & email 인증?
+  + [ ] user login() 여부와 readable() 여부는 구분하여 페이지 띄워줄 필요 있을까?
+  + [ ] login: email check & email 인증. => 되고나면 사용자 가입 페이지 만들자.
   + [ ] alert()창을 상단 메시지바 등으로 처리 고려..
   + [ ] html, css minimal화 하기..
   + [ ] tinymce 고려.. 그러면 file, photo도 고려되어야.. 쩝.. summernote 그냥되는데? 확인해보자
@@ -25,6 +28,7 @@
   + [ ] SNS 로그인 (Naver, 카카오톡 등)
 [ ] easynote-comment
 [ ] easynote-tokennote <= 원래 목표..
+  + [ ] 이런걸고려. https://kooku0.github.io/blog/auto%EB%A1%9C-%EB%B2%84%EC%A0%84%EA%B4%80%EB%A6%AC%EC%99%80-%EB%B0%B0%ED%8F%AC%EA%B4%80%EB%A6%AC%ED%95%98%EA%B8%B0/
   + [ ] 빨리 만들자.. tokennote로 tokennotebook 만들고,
         booxlab.co.kr을 구성하는거다!!! 그래서 교육사이트 만들자!!! (무료 + 유료)
         +------------+             +------------------+

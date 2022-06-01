@@ -9,8 +9,9 @@
   <script src='//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js'></script>
   <script src='//cdnjs.cloudflare.com/ajax/libs/jquery-easing/1.3/jquery.easing.min.js'></script>
 
-  <link rel="stylesheet" href="[root]/css/easynote.css">
-  <script src="[root]/js/easynote.api.js"></script>
+  <link rel="stylesheet" href="{{root}}/theme/{{theme}}/css/easynote.css">
+  <script src="{{root}}/easynote.api.js"></script>
+  <script src="{{root}}/theme/{{theme}}/js/easynote.theme.js"></script>
 
   <style>
     /* list 전용 임시 */
@@ -31,12 +32,22 @@
     .list-group-item {
       text-align: left;
     }
+    .list-group-item:hover {
+      background-color: rgb(237, 244, 248);
+      cursor: pointer;
+    }
+    .list-group-item-config {
+      background-color: rgb(247, 240, 244);
+    }
+    .list-group-item-config:hover {
+      background-color: rgb(245, 230, 240);
+    }
   </style>  
   
   <script>
     $(document).ready(function () {
-      easynote_set_root('[root]')
-      easynote_set_system_date([system_date])
+      easynote_set_root('{{root}}')
+      easynote_set_system_date({{system_date}})
 
       $('.list-group').empty(); // sample
 
@@ -53,7 +64,7 @@
       }
 
       // easynote.member list
-      easynote_list_scroll_page = easynote_api_admin_member_list(easynote_list_scroll_page);
+      easynote_list_scroll_page = easynote_theme_admin_member_list(easynote_list_scroll_page);
 
       // Scroll
       $(window).scroll(function(){
@@ -64,7 +75,7 @@
 
         //if (scrollNow + $(window).height() + 100 >= $('#mainPage').height()){
         if (scrollNow + $(window).height() + 100 >= $(document).height()) {
-          easynote_list_scroll_page = easynote_api_admin_member_list(easynote_list_scroll_page, easynote_list_search_word)
+          easynote_list_scroll_page = easynote_theme_admin_member_list(easynote_list_scroll_page, easynote_list_search_word)
         }
       })
     });
@@ -72,7 +83,7 @@
     //setTimeout(function() {
     const intervalId = setInterval(function() {
       if ($(document).height() <= $(window).height()) { // no scroll
-        var next_page = easynote_api_admin_member_list(easynote_list_scroll_page, easynote_list_search_word)
+        var next_page = easynote_theme_admin_member_list(easynote_list_scroll_page, easynote_list_search_word)
         if (easynote_list_scroll_page == next_page) { // end page
           clearInterval(intervalId)
         }
@@ -92,12 +103,12 @@
     <fieldset>
       <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
-          <div class="loginbox"><li class="breadcrumb-item"><a href="[root]/login">login</a></li></div>
-          <div class="logoutbox"><li class="breadcrumb-item"><a href="#" onclick="easynote_api_logout('[root]')">logout</a></li></div>
+          <div class="loginbox"><li class="breadcrumb-item"><a href="{{root}}/login">login</a></li></div>
+          <div class="logoutbox"><li class="breadcrumb-item"><a href="#" onclick="easynote_api_logout('{{root}}')">logout</a></li></div>
           &nbsp; | &nbsp;
-          <li class="breadcrumb-item"><a href="[root]">home</a></li>
-          <li class="breadcrumb-item"><a href="[root]/admin">admin</a></li>
-          <li class="breadcrumb-item"><a href="[root]/admin/member">member</a></li>
+          <li class="breadcrumb-item"><a href="{{root}}">home</a></li>
+          <li class="breadcrumb-item"><a href="{{root}}/admin">admin</a></li>
+          <li class="breadcrumb-item"><a href="{{root}}/admin/member">member</a></li>
         </ol>
       </nav>
       
@@ -129,7 +140,7 @@
               <small>3 days ago</small>
             </div>
             <pre class="mb-1">테스트\n간단한 내용 보이기..\n블라블라</pre>
-            <small>..더보기..</small>
+            <small>..more..</small>
           </a>
         </div>
       </div>
@@ -143,11 +154,11 @@ $("#search-word").on('input', function() {
   $('.list-group').empty(); // sample
   easynote_list_scroll_page = 1;
   easynote_list_search_word = $(this).val();
-  easynote_list_scroll_page = easynote_api_admin_member_list(easynote_list_scroll_page, easynote_list_search_word)
+  easynote_list_scroll_page = easynote_theme_admin_member_list(easynote_list_scroll_page, easynote_list_search_word)
 
   const intervalId = setInterval(function() {
     if ($(document).height() <= $(window).height()) { // no scroll
-      var next_page = easynote_api_admin_member_list(easynote_list_scroll_page, easynote_list_search_word)
+      var next_page = easynote_theme_admin_member_list(easynote_list_scroll_page, easynote_list_search_word)
       if (easynote_list_scroll_page == next_page) { // end page
         clearInterval(intervalId)
       }

@@ -1,14 +1,15 @@
 {
-	"name": "easynote",
+	"name": "easynote.app",
 	"version": "1.0.0",
 	"private": true,
 	"scripts": {
-		"start": "nodemon app.js"
+		"start": "nodemon easynote.app.js"
 	},
-	"description": "easynote app for easy bbs",
+	"description": "easynote.app for easy bbs",
 	"author": {
 		"name": "Andy Yang",
-		"email": "booxboox@naver.com"
+		"email": "booxboox@naver.com",
+		"www": "http://www.booxlab.co.kr"
 	},
 	"dependencies": {
 		"cheerio": "^1.0.0-rc.10",

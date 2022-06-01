@@ -21,8 +21,28 @@ module.exports = {
 
 		// express - post 데이터 처리 사용
 		const bodyParser = require('body-parser')
-		app.use(bodyParser.urlencoded({ extended: true })) // create and useapplication/json parser
-		app.use(bodyParser.json())
+
+		//app.use(bodyParser.json())
+		//app.use(bodyParser.urlencoded({ extended: true })) // create and useapplication/json parser
+    // PayloadTooLargeError: request entity too large 해결위해 위의 코드 막고, 아래 코드 추가
+		app.use(bodyParser.json({
+			limit : "10mb"
+		}));
+		app.use(bodyParser.urlencoded({
+			limit : "10mb",
+			extended: true
+		}));
+		app.use((err, req, res, next) => {
+			if (err) {
+				res.json({
+          result: {
+            success: false,
+            message: err.stack
+          }
+        });
+			}
+			next();
+		});
 
 		// express - 쿠키/세션 처리 사용
 		const cookieParser = require('cookie-parser')
