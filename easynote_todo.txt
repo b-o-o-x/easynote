@@ -18,7 +18,7 @@
   + [o] [root],[theme],[system_date],[num] => {{num}}
   + [ ] refactoring..
   + [ ] 비회원 보기??? 메인 홈페이지에서 보이기 해서 공지사항으로 사용 가능..
-  + [ ] github contribution graph 안나옴 -_-;;
+  + [ ] github contribution graph 안나옴 -_-;; 다시
   ---------- 필수아님 ----------
   + [ ] user login() 여부와 readable() 여부는 구분하여 페이지 띄워줄 필요 있을까?
   + [ ] login: email check & email 인증. => 되고나면 사용자 가입 페이지 만들자.
