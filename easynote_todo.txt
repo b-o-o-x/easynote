@@ -17,14 +17,14 @@
   + [o] theme 기능
   + [o] [root],[theme],[system_date],[num] => {{num}}
   + [ ] refactoring..
-  + [ ] 비회원 보기??? 메인 홈페이지에서 보이기 해서 공지사항으로 사용 가능..
-  + [ ] github contribution graph 안나옴 -_-;; again3
+  + [ ] 비회원 보기??? 메인 홈페이지에서 보이기 해서 공지사항으로 사용 가능.. level==999999999? 대신 글쓰기,수정 암호 확인 등 부가 작업 필요.
+  + [o] github contribution graph 안나옴 -_-;; -> github에서 main branch만 따른다. develop으로 바꿀까도 했지만.. develop->main에 push할때 전부 적용되네..
   ---------- 필수아님 ----------
   + [ ] user login() 여부와 readable() 여부는 구분하여 페이지 띄워줄 필요 있을까?
   + [ ] login: email check & email 인증. => 되고나면 사용자 가입 페이지 만들자.
   + [ ] alert()창을 상단 메시지바 등으로 처리 고려..
   + [ ] html, css minimal화 하기..
-  + [ ] tinymce 고려.. 그러면 file, photo도 고려되어야.. 쩝.. summernote 그냥되는데? 확인해보자
+  + [o] tinymce 고려.. 그러면 file, photo도 고려되어야.. 쩝.. summernote 그냥되는데? 확인해보자 -> 필요시 그냥 된다.
   + [ ] express 이메일 인증.. (https://velog.io/@tkdfo93/Email-%EC%9D%B8%EC%A6%9D-%EA%B5%AC%ED%98%84-Final-Project-Skill)
   + [ ] SNS 로그인 (Naver, 카카오톡 등)
 [ ] easynote-comment

@@ -61,7 +61,7 @@
         // display time
         var display_date = getYYYYMMDD_HHIISS(new Date(date));
 
-        let temp_html = `<a class="list-group-item list-group-item-action" aria-current="true">
+        let temp_html = `<div class="list-group-item list-group-item-action" aria-current="true">
                           <div class="d-flex w-100 justify-content-between">
                             <small class="mb-num">#${num}</small>
                             <h5 class="mb-title">${name}</h5>
@@ -72,7 +72,7 @@
                             <small></small>
                             <small class="mb-date">${user_id}</small>
                           </div>
-                        </a>`
+                        </div>`
         $('.list-group').append(temp_html)
       }
     }

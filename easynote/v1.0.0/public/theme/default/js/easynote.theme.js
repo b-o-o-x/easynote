@@ -162,14 +162,14 @@ var use_tinymce = true;
         if (show_list_note_moreless) {
           display_note = note;
 
-          let temp_html = `<a onclick="easynote_page_read(${num})" class="list-group-item list-group-item-action" aria-current="true">
+          let temp_html = `<div onclick="easynote_page_read(${num})" class="list-group-item list-group-item-action" aria-current="true">
                             <div class="d-flex w-100 justify-content-between">
                               <small class="mb-num">#${num}</small>
                               <h5 class="mb-title">${name}</h5>
                               <small class="mb-date">${display_date_gap}</small>
                             </div>
-                            <pre class="mb-note" id="mb-note-${num}">${display_note}</pre>
-                          </a>
+                            <div class="mb-note" id="mb-note-${num}">${display_note}</div>
+                          </div>
                           <div class="d-flex w-100 justify-content-between">
                             <small class="moreless" onclick="easynote_toggle_note(${num})" id="moreless-${num}">▼ more</small>
                             <small class="mb-date">${user_id}</small>
